@@ -28,6 +28,11 @@ async def register_user(
     if result.scalar_one_or_none() is not None:
         raise ValueError("Email already registered")
 
+    # Check if username already exists
+    result = await db.execute(select(User).where(User.display_name == display_name))
+    if result.scalar_one_or_none() is not None:
+        raise ValueError("Username already taken")
+
     user = User(
         email=email,
         display_name=display_name,
@@ -43,11 +48,11 @@ async def register_user(
 
 async def authenticate_user(
     db: AsyncSession,
-    email: str,
+    username: str,
     password: str,
 ) -> User | None:
     """Verify credentials and return the user, or None."""
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(select(User).where(User.display_name == username))
     user = result.scalar_one_or_none()
     if user is None or not verify_password(password, user.password_hash):
         return None

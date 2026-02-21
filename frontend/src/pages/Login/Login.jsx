@@ -8,7 +8,7 @@ export default function Login() {
     const { login } = useAuth()
     const navigate = useNavigate()
 
-    const [email, setEmail] = useState('')
+    const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
@@ -18,7 +18,7 @@ export default function Login() {
         setError('')
         setLoading(true)
         try {
-            await login(email, password)
+            await login(username, password)
             navigate('/')
         } catch (err) {
             setError(err.message || 'Login failed')
@@ -39,14 +39,14 @@ export default function Login() {
                     {error && <div className="form-error">{error}</div>}
 
                     <div className="form-group">
-                        <label className="form-label" htmlFor="login-email">Email</label>
+                        <label className="form-label" htmlFor="login-username">Username</label>
                         <input
-                            id="login-email"
-                            type="email"
+                            id="login-username"
+                            type="text"
                             className="form-input"
-                            placeholder="you@company.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Your username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             required
                             autoFocus
                         />

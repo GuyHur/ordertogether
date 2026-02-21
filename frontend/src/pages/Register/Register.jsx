@@ -57,17 +57,18 @@ export default function Register() {
                     {error && <div className="form-error">{error}</div>}
 
                     <div className="form-group">
-                        <label className="form-label" htmlFor="reg-name">Display Name</label>
+                        <label className="form-label" htmlFor="reg-name">Username</label>
                         <input
                             id="reg-name"
                             type="text"
                             className="form-input"
-                            placeholder="John Doe"
+                            placeholder="Choose a username"
                             value={form.displayName}
                             onChange={update('displayName')}
                             required
                             autoFocus
                         />
+                        <span className="form-hint">This is what you'll use to sign in</span>
                     </div>
 
                     <div className="form-group">

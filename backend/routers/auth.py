@@ -33,11 +33,11 @@ async def register(body: RegisterRequest, db: DB):
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, db: DB):
     """Authenticate and return JWT tokens."""
-    user = await authenticate_user(db, email=body.email, password=body.password)
+    user = await authenticate_user(db, username=body.username, password=body.password)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Invalid username or password",
         )
     return create_tokens(user)
 

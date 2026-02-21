@@ -96,6 +96,13 @@
     animation: fadeIn 0.3s ease;
 }
 
+.form-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
 .auth-footer {
     margin-top: var(--space-xl);
     text-align: center;
