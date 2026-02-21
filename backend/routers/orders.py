@@ -349,7 +349,8 @@ async def add_comment(order_id: str, body: CommentCreate, current_user: CurrentU
 
 # ── Receipt endpoints ────────────────────────────────────────────────────
 
-UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads" / "receipts"
+from core.config import settings
+UPLOAD_DIR = Path(settings.RECEIPTS_DIR).resolve()
 
 
 @router.post("/{order_id}/receipts", response_model=ReceiptRead, status_code=status.HTTP_201_CREATED)
@@ -413,3 +414,30 @@ async def download_receipt(order_id: str, receipt_id: str, current_user: Current
     if receipt is None:
         raise HTTPException(status_code=404, detail="Receipt not found")
     return FileResponse(receipt.file_path, media_type=receipt.content_type, filename=receipt.filename)
+
+@router.delete("/{order_id}/receipts/{receipt_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_receipt(order_id: str, receipt_id: str, current_user: CurrentUser, db: DB):
+    """Delete a receipt image (creator only)."""
+    import os
+    order = await get_order_by_id(db, order_id)
+    if order is None:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.creator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the order creator can delete receipts")
+
+    result = await db.execute(
+        select(Receipt).where(Receipt.id == receipt_id, Receipt.order_id == order_id)
+    )
+    receipt = result.scalar_one_or_none()
+    if receipt is None:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+
+    # Clean up physical file
+    if receipt.file_path and os.path.exists(receipt.file_path):
+        try:
+            os.remove(receipt.file_path)
+        except OSError:
+            pass
+
+    await db.delete(receipt)
+    await db.commit()

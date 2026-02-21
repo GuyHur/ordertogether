@@ -275,11 +275,25 @@ async def update_order_status(
     return await get_order_by_id(db, order_id)
 
 
+import os
+from sqlalchemy import select
+from models.receipt import Receipt
+
 async def delete_order(db: AsyncSession, order_id: str, user_id: str) -> bool:
-    """Cancel/delete an order (creator only)."""
+    """Cancel/delete an order (creator only). Also removes local attachment files."""
     order = await get_order_by_id(db, order_id)
     if order is None or order.creator_id != user_id:
         return False
+
+    # Clean up physical receipt files from disk
+    result = await db.execute(select(Receipt).where(Receipt.order_id == order_id))
+    receipts = result.scalars().all()
+    for receipt in receipts:
+        if receipt.file_path and os.path.exists(receipt.file_path):
+            try:
+                os.remove(receipt.file_path)
+            except OSError:
+                pass
 
     await db.delete(order)
     await db.commit()

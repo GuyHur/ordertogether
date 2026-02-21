@@ -59,11 +59,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # App
     APP_NAME: str = "OrderTogether"
     DEBUG: bool = True
     AVATAR_URL_TEMPLATE: str | None = None
     ORDER_EXPIRATION_HOURS: int = 24
+    RECEIPTS_DIR: str = "./uploads/receipts"
 
     # Preset buildings available for order targeting
     BUILDINGS: list[str] = [

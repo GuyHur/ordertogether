@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast/Toast'
 import Button from '../../components/Button/Button'
 import CountdownTimer from '../../components/CountdownTimer/CountdownTimer'
+import Modal from '../../components/Modal/Modal'
 import QRModal from '../../components/QRModal/QRModal'
 import Avatar from '../../components/Avatar/Avatar'
 import '../auth.css'
@@ -44,6 +45,9 @@ export default function OrderDetail() {
     // Receipts
     const [receipts, setReceipts] = useState([])
     const [uploadingReceipt, setUploadingReceipt] = useState(false)
+
+    // Modals
+    const [confirmAction, setConfirmAction] = useState(null)
 
     const loadOrder = useCallback(async (showLoading = true) => {
         if (showLoading) setLoading(true)
@@ -102,6 +106,45 @@ export default function OrderDetail() {
     }, [id])
 
     useEffect(() => { loadReceipts() }, [loadReceipts])
+
+    const handleDownload = async (receiptId, filename) => {
+        try {
+            const token = localStorage.getItem('access_token')
+            const res = await fetch(`/api/orders/${id}/receipts/${receiptId}/download`, {
+                headers: { ...(token && { Authorization: `Bearer ${token}` }) }
+            })
+            if (!res.ok) throw new Error("Download failed")
+
+            const blob = await res.blob()
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = filename
+            document.body.appendChild(a)
+            a.click()
+            window.URL.revokeObjectURL(url)
+            a.remove()
+        } catch (err) {
+            addToast("Error downloading receipt", "error")
+        }
+    }
+
+    const handleDeleteReceipt = (receiptId, filename) => {
+        setConfirmAction({
+            title: 'Delete Receipt',
+            message: `Are you sure you want to permanently delete the receipt "${filename}"?`,
+            onConfirm: async () => {
+                setConfirmAction(null)
+                try {
+                    await api.delete(`/orders/${id}/receipts/${receiptId}`)
+                    addToast('Receipt deleted', 'info')
+                    await loadReceipts()
+                } catch (err) {
+                    addToast(err.message, 'error')
+                }
+            }
+        })
+    }
 
     if (loading) return (
         <div className="detail-page">
@@ -179,15 +222,21 @@ export default function OrderDetail() {
         }
     }
 
-    const handleKick = async (participantId) => {
-        if (!window.confirm('Are you sure you want to remove this user from the order?')) return;
-        try {
-            await api.delete(`/orders/${id}/participants/${participantId}`)
-            addToast('Participant removed', 'info')
-            await loadOrder()
-        } catch (err) {
-            addToast(err.message, 'error')
-        }
+    const handleKick = (participantId) => {
+        setConfirmAction({
+            title: 'Remove Participant',
+            message: 'Are you sure you want to remove this user from the order?',
+            onConfirm: async () => {
+                setConfirmAction(null)
+                try {
+                    await api.delete(`/orders/${id}/participants/${participantId}`)
+                    addToast('Participant removed', 'info')
+                    await loadOrder()
+                } catch (err) {
+                    addToast(err.message, 'error')
+                }
+            }
+        })
     }
 
     const handleStatusChange = async (newStatus) => {
@@ -200,15 +249,21 @@ export default function OrderDetail() {
         }
     }
 
-    const handleDelete = async () => {
-        if (!confirm('Are you sure you want to cancel this order?')) return
-        try {
-            await api.delete(`/orders/${id}`)
-            addToast('Order cancelled', 'info')
-            navigate('/')
-        } catch (err) {
-            addToast(err.message, 'error')
-        }
+    const handleDelete = () => {
+        setConfirmAction({
+            title: 'Cancel Order',
+            message: 'Are you sure you want to cancel this order?',
+            onConfirm: async () => {
+                setConfirmAction(null)
+                try {
+                    await api.delete(`/orders/${id}`)
+                    addToast('Order cancelled', 'info')
+                    navigate('/')
+                } catch (err) {
+                    addToast(err.message, 'error')
+                }
+            }
+        })
     }
 
     const formatDate = (d) => {
@@ -548,9 +603,18 @@ export default function OrderDetail() {
                             {receipts.map(r => (
                                 <div key={r.id} className="receipt-row">
                                     <span className="receipt-name">{r.filename}</span>
-                                    <a href={`/api/orders/${id}/receipts/${r.id}/download`} target="_blank" rel="noreferrer" className="receipt-download">
-                                        Download
-                                    </a>
+                                    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
+                                        <button onClick={() => handleDownload(r.id, r.filename)} className="receipt-download">
+                                            Download
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteReceipt(r.id, r.filename)}
+                                            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent-danger)' }}
+                                            title="Delete Receipt"
+                                        >
+                                            <TrashIcon size={14} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -566,9 +630,9 @@ export default function OrderDetail() {
                             {receipts.map(r => (
                                 <div key={r.id} className="receipt-row">
                                     <span className="receipt-name">{r.filename}</span>
-                                    <a href={`/api/orders/${id}/receipts/${r.id}/download`} target="_blank" rel="noreferrer" className="receipt-download">
+                                    <button onClick={() => handleDownload(r.id, r.filename)} className="receipt-download">
                                         Download
-                                    </a>
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -633,6 +697,22 @@ export default function OrderDetail() {
                     groupOrderId={order.group_order_id}
                     onClose={() => setShowQR(false)}
                 />
+            )}
+
+            {/* Confirmation modal */}
+            {confirmAction && (
+                <Modal
+                    title={confirmAction.title}
+                    onClose={() => setConfirmAction(null)}
+                    footer={
+                        <>
+                            <Button variant="ghost" onClick={() => setConfirmAction(null)}>Cancel</Button>
+                            <Button variant="danger" onClick={confirmAction.onConfirm}>OK</Button>
+                        </>
+                    }
+                >
+                    <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{confirmAction.message}</p>
+                </Modal>
             )}
         </div>
     )
