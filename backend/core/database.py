@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from core.config import settings
 
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    settings.get_database_url,
     echo=settings.DEBUG,
     future=True,
 )
@@ -41,5 +41,5 @@ async def init_db() -> None:
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        if "sqlite" in settings.DATABASE_URL:
+        if "sqlite" in settings.get_database_url:
             await conn.run_sync(_add_auth_source_if_missing)

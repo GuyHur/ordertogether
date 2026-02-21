@@ -13,7 +13,45 @@ class Settings(BaseSettings):
     )
 
     # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./ordertogether.db"
+    DATA_DIR: str = "./data"
+    SQLITE_DB_NAME: str = "ordertogether.db"
+    
+    # Optional Postgres Connection
+    POSTGRES_USER: str | None = None
+    POSTGRES_PASSWORD: str | None = None
+    POSTGRES_HOST: str | None = None
+    POSTGRES_PORT: str = "5432"
+    POSTGRES_DB: str | None = None
+    
+    # Alternatively, supply a raw DATABASE_URL
+    DATABASE_URL: str | None = None
+    
+    @property
+    def get_database_url(self) -> str:
+        # 1. Full URL overrides everything
+        if self.DATABASE_URL:
+            if self.DATABASE_URL.startswith("postgresql://"):
+                return self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return self.DATABASE_URL
+
+        # 2. Reconstruct PostgreSQL URL from parts
+        if self.POSTGRES_HOST and self.POSTGRES_DB:
+            user = self.POSTGRES_USER or ""
+            pwd = f":{self.POSTGRES_PASSWORD}" if self.POSTGRES_PASSWORD else ""
+            cred = f"{user}{pwd}@" if user else ""
+            return f"postgresql+asyncpg://{cred}{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            
+        # 3. Fallback to SQLite file in DATA_DIR
+        import os
+        from pathlib import Path
+        
+        data_path = Path(self.DATA_DIR).resolve()
+        os.makedirs(data_path, exist_ok=True)
+        db_path = data_path / self.SQLITE_DB_NAME
+        
+        # SQLite absolute paths in SQLAlchemy use triple slashes and forward slashes
+        abs_db_path = str(db_path).replace("\\", "/")
+        return f"sqlite+aiosqlite:///{abs_db_path}"
 
     # JWT
     SECRET_KEY: str = "change-me-in-production-use-a-real-secret"
