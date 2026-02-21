@@ -19,8 +19,13 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(pw, bcrypt.gensalt()).decode("utf-8")
 
 
+# Sentinel stored in User.password_hash for LDAP-authenticated users (password verified by AD).
+LDAP_PASSWORD_SENTINEL = "LDAP"
+
 def verify_password(plain: str, hashed: str) -> bool:
-    """Verify a plain-text password against a hash."""
+    """Verify a plain-text password against a hash. LDAP users use a sentinel and are not verified here."""
+    if hashed == LDAP_PASSWORD_SENTINEL:
+        return False
     pw = _truncate(plain).encode("utf-8")
     return bcrypt.checkpw(pw, hashed.encode("utf-8"))
 
