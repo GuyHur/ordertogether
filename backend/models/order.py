@@ -28,6 +28,7 @@ class Order(Base, UUIDMixin, TimestampMixin):
     )
     destination: Mapped[str | None] = mapped_column(String(200), nullable=True)
     order_link: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    group_order_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     deadline: Mapped[str | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships

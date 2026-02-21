@@ -18,6 +18,7 @@ async def create_order(
     description: str | None = None,
     destination: str | None = None,
     order_link: str | None = None,
+    group_order_id: str | None = None,
     deadline: datetime | None = None,
 ) -> Order:
     """Create a new group order."""
@@ -28,6 +29,7 @@ async def create_order(
         description=description,
         destination=destination,
         order_link=order_link,
+        group_order_id=group_order_id,
         deadline=deadline,
         status=OrderStatus.OPEN,
     )

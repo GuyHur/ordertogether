@@ -17,6 +17,7 @@ export default function CreateOrder() {
         description: '',
         destination: '',
         order_link: '',
+        group_order_id: '',
         deadline: '',
     })
     const [loading, setLoading] = useState(false)
@@ -49,6 +50,7 @@ export default function CreateOrder() {
                 description: form.description || null,
                 destination: form.destination || null,
                 order_link: form.order_link || null,
+                group_order_id: form.group_order_id.trim().toUpperCase() || null,
             }
             const order = await api.post('/orders', payload)
             addToast('Order created! Share it with your team.', 'success')
@@ -151,6 +153,22 @@ export default function CreateOrder() {
                         onChange={update('order_link')}
                     />
                 </div>
+
+                {/* Group Order ID for QR — only for Wolt */}
+                {services.find((s) => s.id === form.service_id)?.name?.toLowerCase() === 'wolt' && (
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="order-group-id">Wolt Group Order ID (for QR code)</label>
+                        <input
+                            id="order-group-id"
+                            type="text"
+                            className="form-input"
+                            placeholder="e.g. 7PNCEZM9"
+                            value={form.group_order_id}
+                            onChange={update('group_order_id')}
+                            style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}
+                        />
+                    </div>
+                )}
 
                 <Button type="submit" variant="primary" block size="lg" loading={loading}>
                     Create Order

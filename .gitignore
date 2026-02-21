@@ -26,3 +26,5 @@ dist/
 .agent/
 .cursor/
 .gemini/
+
+*.db

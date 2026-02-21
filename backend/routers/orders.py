@@ -34,6 +34,7 @@ def _to_list_item(order) -> dict:
         "title": order.title,
         "status": order.status.value if hasattr(order.status, "value") else order.status,
         "destination": order.destination,
+        "group_order_id": order.group_order_id,
         "deadline": order.deadline,
         "created_at": order.created_at,
         "creator": {
@@ -56,6 +57,7 @@ def _to_read(order) -> dict:
     data = _to_list_item(order)
     data["description"] = order.description
     data["order_link"] = order.order_link
+    data["group_order_id"] = order.group_order_id
     data["updated_at"] = order.updated_at
     data["participants"] = [
         {
@@ -105,6 +107,7 @@ async def create_new_order(body: OrderCreate, current_user: CurrentUser, db: DB)
         description=body.description,
         destination=body.destination,
         order_link=body.order_link,
+        group_order_id=body.group_order_id,
         deadline=body.deadline,
     )
     return _to_read(order)
@@ -142,6 +145,7 @@ async def update_existing_order(
         description=body.description,
         destination=body.destination,
         order_link=body.order_link,
+        group_order_id=body.group_order_id,
         deadline=body.deadline,
     )
     if order is None:

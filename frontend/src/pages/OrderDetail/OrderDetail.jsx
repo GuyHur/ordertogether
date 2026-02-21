@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
     ArrowLeft, Users, MapPin, Clock, ExternalLink,
-    Calendar, UserPlus, LogOut as LeaveIcon, Trash2
+    Calendar, UserPlus, LogOut as LeaveIcon, Trash2, QrCode
 } from 'lucide-react'
 import { api } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast/Toast'
 import Button from '../../components/Button/Button'
 import CountdownTimer from '../../components/CountdownTimer/CountdownTimer'
+import QRModal from '../../components/QRModal/QRModal'
 import '../auth.css'
 import './OrderDetail.css'
 
@@ -25,6 +26,7 @@ export default function OrderDetail() {
     const [joinNote, setJoinNote] = useState('')
     const [joinItems, setJoinItems] = useState('')
     const [joining, setJoining] = useState(false)
+    const [showQR, setShowQR] = useState(false)
 
     const loadOrder = async () => {
         try {
@@ -131,6 +133,12 @@ export default function OrderDetail() {
                         </div>
                     </div>
                     <div className="detail-actions">
+                        {order.group_order_id && (
+                            <Button variant="ghost" size="sm" onClick={() => setShowQR(true)}>
+                                <QrCode size={16} />
+                                QR Code
+                            </Button>
+                        )}
                         <span className={`order-status ${order.status}`}>{order.status}</span>
                     </div>
                 </div>
@@ -308,6 +316,14 @@ export default function OrderDetail() {
                     )}
                 </div>
             </div>
+
+            {/* QR Code modal */}
+            {showQR && order.group_order_id && (
+                <QRModal
+                    groupOrderId={order.group_order_id}
+                    onClose={() => setShowQR(false)}
+                />
+            )}
         </div>
     )
 }

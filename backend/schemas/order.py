@@ -23,6 +23,7 @@ class OrderCreate(BaseModel):
     description: str | None = None
     destination: str | None = None
     order_link: str | None = None
+    group_order_id: str | None = None
     deadline: datetime | None = None
 
 
@@ -31,6 +32,7 @@ class OrderUpdate(BaseModel):
     description: str | None = None
     destination: str | None = None
     order_link: str | None = None
+    group_order_id: str | None = None
     deadline: datetime | None = None
 
 
@@ -67,6 +69,7 @@ class OrderRead(BaseModel):
     status: str
     destination: str | None = None
     order_link: str | None = None
+    group_order_id: str | None = None
     deadline: datetime | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
@@ -83,6 +86,7 @@ class OrderListItem(BaseModel):
     title: str
     status: str
     destination: str | None = None
+    group_order_id: str | None = None
     deadline: datetime | None = None
     created_at: datetime | None = None
     creator: CreatorSummary
