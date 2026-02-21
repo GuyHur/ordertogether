@@ -32,6 +32,7 @@ OrderTogether is a web application for coordinating group food delivery orders w
    ```
    App: http://localhost:5173 (proxies `/api` to the backend).
 
+<<<<<<< Updated upstream
 ## Running Locally
 
 ### Prerequisites
@@ -78,3 +79,25 @@ The backend reads from `backend/.env`. Default values are provided for local dev
 ## License
 
 This project is not currently published under an open-source license.
+=======
+## LDAP / Windows domain login
+
+You can sync login with your Windows domain (Active Directory) so users sign in with their AD credentials.
+
+1. In the backend, set environment variables (or add them to `backend/.env`):
+
+   - `LDAP_ENABLED=true`
+   - `LDAP_URL` — e.g. `ldap://your-dc.company.com` or `ldaps://...`
+   - `LDAP_BASE_DN` — e.g. `DC=company,DC=com`
+   - `LDAP_BIND_DN` — service account DN for searching (optional if anonymous bind is allowed), e.g. `CN=svc-ldap,OU=Service Accounts,DC=company,DC=com`
+   - `LDAP_BIND_PASSWORD` — password for the service account
+   - `LDAP_USER_SEARCH_ATTRIBUTE` — attribute to match the login value, usually `userPrincipalName` (email) or `sAMAccountName` (Windows username)
+   - `LDAP_USER_SEARCH_ATTRIBUTE_ALT` — optional second attribute so users can log in with either email or username (e.g. `sAMAccountName` if primary is `userPrincipalName`)
+   - `LDAP_USER_SEARCH_FILTER` — optional, e.g. `(objectClass=user)` or restrict to an OU
+
+2. Install dependencies: `cd backend && uv sync` (adds `ldap3`).
+
+3. On first LDAP login, a user record is created or updated in the app (display name from AD). Existing local users can also sign in via LDAP; their record is then linked to LDAP.
+
+The same login form is used: users enter email (or Windows username if you set `LDAP_USER_SEARCH_ATTRIBUTE`/alt to support it) and password. No frontend changes required.
+>>>>>>> Stashed changes

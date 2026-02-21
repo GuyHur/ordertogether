@@ -33,6 +33,18 @@ class Settings(BaseSettings):
         "Main Office",
         "Warehouse",
     ]
+    # LDAP (Windows domain / Active Directory)
+    LDAP_ENABLED: bool = False
+    LDAP_URL: str = "ldap://dc.company.com"
+    LDAP_BASE_DN: str = "DC=company,DC=com"
+    LDAP_BIND_DN: str = ""
+    LDAP_BIND_PASSWORD: str = ""
+    # Attribute(s) to match login: userPrincipalName (email) and/or sAMAccountName (Windows username)
+    LDAP_USER_SEARCH_ATTRIBUTE: str = "userPrincipalName"
+    # Optional second attribute so users can log in with email OR username (e.g. sAMAccountName)
+    LDAP_USER_SEARCH_ATTRIBUTE_ALT: str = ""
+    # Optional: restrict to a specific OU
+    LDAP_USER_SEARCH_FILTER: str = "(objectClass=user)"
 
     # Preset food tags for categorising orders
     FOOD_TAGS: list[str] = [
@@ -49,6 +61,7 @@ class Settings(BaseSettings):
         "Italian",
         "Vegan",
     ]
+
 
 
 settings = Settings()
