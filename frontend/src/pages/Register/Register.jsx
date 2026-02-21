@@ -79,7 +79,7 @@ export default function Register() {
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label" htmlFor="reg-email">Email</label>
+                        <label className="form-label" htmlFor="reg-email">Email (optional)</label>
                         <input
                             id="reg-email"
                             type="email"
@@ -87,7 +87,6 @@ export default function Register() {
                             placeholder="you@company.com"
                             value={form.email}
                             onChange={update('email')}
-                            required
                         />
                     </div>
 

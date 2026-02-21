@@ -1,9 +1,18 @@
-"""Order routes: CRUD, join, leave, status updates."""
+"""Order routes: CRUD, join, leave, status updates, comments, receipts."""
 
-from fastapi import APIRouter, HTTPException, Query, status
+import shutil
+import uuid
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, status
 
 from core.deps import DB, CurrentUser
+from models.comment import OrderComment
+from models.notification import Notification
 from models.order import OrderStatus
+from models.receipt import Receipt
+from schemas.comment import CommentCreate, CommentRead
+from schemas.receipt import ReceiptRead
 from schemas.order import (
     InviteCreate,
     InviteRead,
@@ -29,6 +38,9 @@ from services.order_service import (
     update_order,
     update_order_status,
 )
+from services.notification_service import notify_order_participants
+
+from sqlalchemy import select
 
 router = APIRouter(prefix="/api/orders", tags=["orders"])
 
@@ -206,6 +218,12 @@ async def join_existing_order(
         raise HTTPException(status_code=400, detail=str(e))
 
     order = await get_order_by_id(db, order_id)
+    await notify_order_participants(
+        db, order,
+        message=f"{current_user.display_name} joined the order \"{order.title}\"",
+        type="joined",
+        exclude_user_id=current_user.id,
+    )
     return _to_read(order)
 
 
@@ -228,6 +246,13 @@ async def kick_order_participant(order_id: str, user_id: str, current_user: Curr
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to kick participant (not allowed, or participant not found)",
         )
+    from services.notification_service import create_notification
+    order = await get_order_by_id(db, order_id)
+    await create_notification(
+        db, user_id=user_id,
+        message=f"You were removed from the order \"{order.title}\"",
+        type="kicked", order_id=order_id,
+    )
 
 
 @router.put("/{order_id}/status", response_model=OrderRead)
@@ -244,6 +269,12 @@ async def change_order_status(
 
     if order is None:
         raise HTTPException(status_code=403, detail="Not allowed or order not found")
+    await notify_order_participants(
+        db, order,
+        message=f"Order \"{order.title}\" status changed to {body.status.replace('_', ' ')}",
+        type="status_change",
+        exclude_user_id=current_user.id,
+    )
     return _to_read(order)
 
 
@@ -277,3 +308,108 @@ async def revoke_invite_link(
     success = await revoke_invite(db, order_id=order_id, invite_id=invite_id, user_id=current_user.id)
     if not success:
         raise HTTPException(status_code=404, detail="Invite not found or not allowed")
+
+
+# ── Comment endpoints ────────────────────────────────────────────────────
+
+@router.get("/{order_id}/comments", response_model=list[CommentRead])
+async def list_comments(order_id: str, current_user: CurrentUser, db: DB):
+    """Get all comments for an order."""
+    result = await db.execute(
+        select(OrderComment)
+        .where(OrderComment.order_id == order_id)
+        .order_by(OrderComment.created_at.asc())
+    )
+    return list(result.scalars().all())
+
+
+@router.post("/{order_id}/comments", response_model=CommentRead, status_code=status.HTTP_201_CREATED)
+async def add_comment(order_id: str, body: CommentCreate, current_user: CurrentUser, db: DB):
+    """Post a comment on an order."""
+    order = await get_order_by_id(db, order_id)
+    if order is None:
+        raise HTTPException(status_code=404, detail="Order not found")
+    comment = OrderComment(
+        order_id=order_id,
+        user_id=current_user.id,
+        body=body.body,
+    )
+    db.add(comment)
+    await db.commit()
+    await db.refresh(comment)
+    # Notify other participants
+    await notify_order_participants(
+        db, order,
+        message=f"{current_user.display_name} commented on \"{order.title}\"",
+        type="comment",
+        exclude_user_id=current_user.id,
+    )
+    return comment
+
+
+# ── Receipt endpoints ────────────────────────────────────────────────────
+
+UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads" / "receipts"
+
+
+@router.post("/{order_id}/receipts", response_model=ReceiptRead, status_code=status.HTTP_201_CREATED)
+async def upload_receipt(
+    order_id: str,
+    current_user: CurrentUser,
+    db: DB,
+    file: UploadFile = File(...),
+):
+    """Upload a receipt image for an order (creator only)."""
+    order = await get_order_by_id(db, order_id)
+    if order is None:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.creator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the order creator can upload receipts")
+
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    ext = Path(file.filename).suffix if file.filename else ".jpg"
+    unique_name = f"{uuid.uuid4().hex}{ext}"
+    dest = UPLOAD_DIR / unique_name
+    with open(dest, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    receipt = Receipt(
+        order_id=order_id,
+        uploaded_by=current_user.id,
+        filename=file.filename or unique_name,
+        file_path=str(dest),
+        content_type=file.content_type or "image/jpeg",
+    )
+    db.add(receipt)
+    await db.commit()
+    await db.refresh(receipt)
+
+    await notify_order_participants(
+        db, order,
+        message=f"A receipt was uploaded for \"{order.title}\"",
+        type="info",
+        exclude_user_id=current_user.id,
+    )
+    return receipt
+
+
+@router.get("/{order_id}/receipts", response_model=list[ReceiptRead])
+async def list_receipts(order_id: str, current_user: CurrentUser, db: DB):
+    """List all receipts for an order."""
+    result = await db.execute(
+        select(Receipt).where(Receipt.order_id == order_id).order_by(Receipt.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+@router.get("/{order_id}/receipts/{receipt_id}/download")
+async def download_receipt(order_id: str, receipt_id: str, current_user: CurrentUser, db: DB):
+    """Download a receipt image."""
+    from fastapi.responses import FileResponse
+    result = await db.execute(
+        select(Receipt).where(Receipt.id == receipt_id, Receipt.order_id == order_id)
+    )
+    receipt = result.scalar_one_or_none()
+    if receipt is None:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    return FileResponse(receipt.file_path, media_type=receipt.content_type, filename=receipt.filename)

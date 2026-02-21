@@ -1,0 +1,107 @@
+.admin-page {
+    padding: calc(var(--navbar-height) + var(--space-2xl)) var(--space-xl) var(--space-2xl);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.admin-section {
+    background: var(--bg-card);
+    border: var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    backdrop-filter: var(--glass-blur);
+}
+
+.admin-section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+}
+
+.admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.admin-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+    border: var(--border-subtle);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.admin-remove-btn {
+    background: none;
+    border: none;
+    color: var(--accent-danger);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.admin-remove-btn:hover {
+    background: rgba(252, 129, 129, 0.12);
+}
+
+.admin-add-form {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.admin-add-form .form-input {
+    flex: 1;
+    min-width: 140px;
+}
+
+.admin-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.admin-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+    background: rgba(var(--accent-primary-rgb), 0.1);
+    color: var(--text-accent);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+}
+
+.tag-remove {
+    background: none;
+    border: none;
+    color: var(--accent-danger);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+}
+
+.admin-service-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    object-fit: contain;
+}

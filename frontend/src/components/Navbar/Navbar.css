@@ -226,3 +226,125 @@
         display: none;
     }
 }
+
+/* ── Notification Bell ────────────────────────────────────────────────── */
+.navbar-notif-wrapper {
+    position: relative;
+}
+
+.navbar-bell {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    position: relative;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s, background 0.2s;
+}
+
+.navbar-bell:hover {
+    color: var(--text-primary);
+    background: var(--bg-card-hover);
+}
+
+.bell-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--accent-danger);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.notif-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    width: 340px;
+    max-height: 420px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: var(--border-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-elevated);
+    backdrop-filter: var(--glass-blur);
+    z-index: 200;
+    animation: fadeIn 0.2s ease;
+}
+
+.notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: var(--border-subtle);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.notif-mark-all {
+    background: none;
+    border: none;
+    color: var(--accent-primary);
+    cursor: pointer;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+}
+
+.notif-mark-all:hover {
+    text-decoration: underline;
+}
+
+.notif-empty {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.notif-list {
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.notif-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: var(--border-subtle);
+    transition: background 0.15s;
+}
+
+.notif-item:hover {
+    background: var(--bg-card-hover);
+}
+
+.notif-item.unread {
+    background: rgba(var(--accent-primary-rgb), 0.06);
+    border-left: 3px solid var(--accent-primary);
+}
+
+.notif-message {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+.notif-time {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 2px;
+}

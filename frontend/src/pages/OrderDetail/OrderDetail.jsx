@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
     ArrowLeft, Users, MapPin, Clock, ExternalLink,
     Calendar, UserPlus, UserMinus, LogOut as LeaveIcon, Trash2 as TrashIcon, QrCode,
-    Share2, Building, Check, Copy, Link2, Plus
+    Share2, Building, Check, Copy, Link2, Plus, MessageCircle, Send, Upload, FileImage
 } from 'lucide-react'
 import { api } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
@@ -34,6 +34,15 @@ export default function OrderDetail() {
     const [invites, setInvites] = useState([])
     const [creatingInvite, setCreatingInvite] = useState(false)
     const [linkCopied, setLinkCopied] = useState(false)
+
+    // Chat
+    const [comments, setComments] = useState([])
+    const [commentBody, setCommentBody] = useState('')
+    const [sendingComment, setSendingComment] = useState(false)
+
+    // Receipts
+    const [receipts, setReceipts] = useState([])
+    const [uploadingReceipt, setUploadingReceipt] = useState(false)
 
     const loadOrder = useCallback(async (showLoading = true) => {
         if (showLoading) setLoading(true)
@@ -68,6 +77,30 @@ export default function OrderDetail() {
     }, [id, isCreator, order?.status])
 
     useEffect(() => { loadInvites() }, [loadInvites])
+
+    // Load comments polling
+    const loadComments = useCallback(async () => {
+        try {
+            const data = await api.get(`/orders/${id}/comments`)
+            setComments(data)
+        } catch { /* noop */ }
+    }, [id])
+
+    useEffect(() => {
+        loadComments()
+        const interval = setInterval(loadComments, 5000)
+        return () => clearInterval(interval)
+    }, [loadComments])
+
+    // Load receipts
+    const loadReceipts = useCallback(async () => {
+        try {
+            const data = await api.get(`/orders/${id}/receipts`)
+            setReceipts(data)
+        } catch { /* noop */ }
+    }, [id])
+
+    useEffect(() => { loadReceipts() }, [loadReceipts])
 
     if (loading) return (
         <div className="detail-page">
@@ -486,6 +519,120 @@ export default function OrderDetail() {
                             <Button variant="danger" size="sm" onClick={handleLeave}>
                                 <LeaveIcon size={14} /> Leave Order
                             </Button>
+                        </div>
+                    )}
+
+                    {/* Receipt Upload (creator) */}
+                    {isCreator && (
+                        <div className="detail-section" style={{ marginTop: 'var(--space-xl)' }}>
+                            <div className="detail-section-title">
+                                <FileImage size={18} />
+                                Receipts
+                            </div>
+                            <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap', marginBottom: 'var(--space-md)' }}>
+                                <label className="receipt-upload-btn">
+                                    <Upload size={14} />
+                                    {uploadingReceipt ? 'Uploading…' : 'Upload Receipt'}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0]
+                                            if (!file) return
+                                            setUploadingReceipt(true)
+                                            try {
+                                                const fd = new FormData()
+                                                fd.append('file', file)
+                                                await api.upload(`/orders/${id}/receipts`, fd)
+                                                addToast('Receipt uploaded!', 'success')
+                                                await loadReceipts()
+                                            } catch (err) {
+                                                addToast(err.message, 'error')
+                                            } finally {
+                                                setUploadingReceipt(false)
+                                            }
+                                        }}
+                                    />
+                                </label>
+                            </div>
+                            {receipts.map(r => (
+                                <div key={r.id} className="receipt-row">
+                                    <span className="receipt-name">{r.filename}</span>
+                                    <a href={`/api/orders/${id}/receipts/${r.id}/download`} target="_blank" rel="noreferrer" className="receipt-download">
+                                        Download
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Receipts list for participants */}
+                    {!isCreator && receipts.length > 0 && (
+                        <div className="detail-section" style={{ marginTop: 'var(--space-xl)' }}>
+                            <div className="detail-section-title">
+                                <FileImage size={18} />
+                                Receipts
+                            </div>
+                            {receipts.map(r => (
+                                <div key={r.id} className="receipt-row">
+                                    <span className="receipt-name">{r.filename}</span>
+                                    <a href={`/api/orders/${id}/receipts/${r.id}/download`} target="_blank" rel="noreferrer" className="receipt-download">
+                                        Download
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Chat / Comments */}
+                    {(isParticipant || isCreator) && (
+                        <div className="detail-section" style={{ marginTop: 'var(--space-xl)' }}>
+                            <div className="detail-section-title">
+                                <MessageCircle size={18} />
+                                Chat ({comments.length})
+                            </div>
+                            <div className="chat-messages">
+                                {comments.length === 0 && (
+                                    <div className="chat-empty">No messages yet. Say something!</div>
+                                )}
+                                {comments.map(c => (
+                                    <div key={c.id} className={`chat-message ${c.user?.id === user?.id ? 'own' : ''}`}>
+                                        <div className="chat-message-header">
+                                            <span className="chat-author">{c.user?.display_name}</span>
+                                            <span className="chat-time">
+                                                {new Date(c.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <div className="chat-body">{c.body}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <form className="chat-input-row" onSubmit={async (e) => {
+                                e.preventDefault()
+                                if (!commentBody.trim() || sendingComment) return
+                                setSendingComment(true)
+                                try {
+                                    await api.post(`/orders/${id}/comments`, { body: commentBody.trim() })
+                                    setCommentBody('')
+                                    await loadComments()
+                                } catch (err) {
+                                    addToast(err.message, 'error')
+                                } finally {
+                                    setSendingComment(false)
+                                }
+                            }}>
+                                <input
+                                    type="text"
+                                    className="form-input chat-input"
+                                    placeholder="Type a message…"
+                                    value={commentBody}
+                                    onChange={(e) => setCommentBody(e.target.value)}
+                                />
+                                <Button type="submit" variant="primary" size="sm" loading={sendingComment}>
+                                    <Send size={14} />
+                                </Button>
+                            </form>
                         </div>
                     )}
                 </div>

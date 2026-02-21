@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from core.config import settings
 from core.lifecycle import startup
-from routers import auth, config, orders, services, users
+from routers import admin, auth, config, notifications, orders, services, users
 
 
 @asynccontextmanager
@@ -26,6 +26,11 @@ icons_dir = Path(__file__).parent / "static" / "icons"
 if icons_dir.exists():
     app.mount("/api/icons", StaticFiles(directory=str(icons_dir)), name="icons")
 
+# Uploaded receipts served statically
+uploads_dir = Path(__file__).parent / "uploads"
+uploads_dir.mkdir(exist_ok=True)
+app.mount("/api/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
+
 # ── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
@@ -41,6 +46,8 @@ app.include_router(users.router)
 app.include_router(services.router)
 app.include_router(orders.router)
 app.include_router(config.router)
+app.include_router(notifications.router)
+app.include_router(admin.router)
 
 
 @app.get("/api/health")

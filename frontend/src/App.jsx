@@ -10,6 +10,7 @@ import CreateOrder from './pages/CreateOrder/CreateOrder'
 import OrderDetail from './pages/OrderDetail/OrderDetail'
 import MyOrders from './pages/MyOrders/MyOrders'
 import Profile from './pages/Profile/Profile'
+import Admin from './pages/Admin/Admin'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -37,6 +38,12 @@ function PublicRoute({ children }) {
   return user ? <Navigate to="/" replace /> : children
 }
 
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return null
+  return user?.is_admin ? children : <Navigate to="/" replace />
+}
+
 function AppLayout() {
   return (
     <>
@@ -47,6 +54,7 @@ function AppLayout() {
         <Route path="/order/:id" element={<OrderDetail />} />
         <Route path="/my-orders" element={<MyOrders />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
       </Routes>
     </>
   )

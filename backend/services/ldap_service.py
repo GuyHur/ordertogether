@@ -48,7 +48,7 @@ def authenticate_ldap(login: str, password: str) -> dict | None:
             search_base=base_dn,
             search_filter=user_filter,
             search_scope=SUBTREE,
-            attributes=["userPrincipalName", "sAMAccountName", "mail", "displayName", "cn"],
+            attributes=["userPrincipalName", "sAMAccountName", "mail", "displayName", "cn", "memberOf"],
         )
 
         if not conn.entries:
@@ -82,7 +82,20 @@ def authenticate_ldap(login: str, password: str) -> dict | None:
         )
         email = upn or mail or (f"{sam}@local" if sam else "user@local")
 
-        return {"email": email, "display_name": display_name}
+        # Check for LDAP superuser group
+        is_superuser = False
+        if settings.LDAP_SUPERUSER_GROUP:
+            target_group = settings.LDAP_SUPERUSER_GROUP.lower()
+            member_of = getattr(entry, "memberOf", [])
+            # memberOf can be a single string or a list
+            if isinstance(member_of, str):
+                member_of = [member_of]
+            for group_dn in member_of:
+                if target_group in group_dn.lower():
+                    is_superuser = True
+                    break
+
+        return {"email": email, "display_name": display_name, "is_superuser": is_superuser}
     except LDAPException:
         return None
 

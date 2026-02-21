@@ -45,6 +45,10 @@ class Settings(BaseSettings):
     LDAP_USER_SEARCH_ATTRIBUTE_ALT: str = ""
     # Optional: restrict to a specific OU
     LDAP_USER_SEARCH_FILTER: str = "(objectClass=user)"
+    
+    # Superuser settings
+    SUPERUSER_USERNAME: str | None = None
+    LDAP_SUPERUSER_GROUP: str | None = None
 
     # Preset food tags for categorising orders
     FOOD_TAGS: list[str] = [
