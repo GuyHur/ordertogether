@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { api } from '../../services/api'
 import Button from '../../components/Button/Button'
 import '../auth.css'
 
@@ -15,8 +16,15 @@ export default function Register() {
         displayName: '',
         building: '',
     })
+    const [buildings, setBuildings] = useState([])
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        api.get('/config')
+            .then((cfg) => setBuildings(cfg.buildings || []))
+            .catch(() => { })
+    }, [])
 
     const update = (field) => (e) =>
         setForm((prev) => ({ ...prev, [field]: e.target.value }))
@@ -68,7 +76,6 @@ export default function Register() {
                             required
                             autoFocus
                         />
-                        <span className="form-hint">This is what you'll use to sign in</span>
                     </div>
 
                     <div className="form-group">
@@ -86,14 +93,17 @@ export default function Register() {
 
                     <div className="form-group">
                         <label className="form-label" htmlFor="reg-building">Building (optional)</label>
-                        <input
+                        <select
                             id="reg-building"
-                            type="text"
-                            className="form-input"
-                            placeholder="e.g. Building A, Floor 3"
+                            className="form-select"
                             value={form.building}
                             onChange={update('building')}
-                        />
+                        >
+                            <option value="">Select a building</option>
+                            {buildings.map((b) => (
+                                <option key={b} value={b}>{b}</option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="form-group">

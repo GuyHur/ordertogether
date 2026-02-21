@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
     ArrowLeft, Users, MapPin, Clock, ExternalLink,
-    Calendar, UserPlus, LogOut as LeaveIcon, Trash2 as TrashIcon, QrCode,
+    Calendar, UserPlus, UserMinus, LogOut as LeaveIcon, Trash2 as TrashIcon, QrCode,
     Share2, Building, Check, Copy, Link2, Plus
 } from 'lucide-react'
 import { api } from '../../services/api'
@@ -28,25 +28,46 @@ export default function OrderDetail() {
     const [loading, setLoading] = useState(true)
     const [joinNote, setJoinNote] = useState('')
     const [joinItems, setJoinItems] = useState('')
+    const [inviteCode, setInviteCode] = useState(inviteToken || '')
     const [joining, setJoining] = useState(false)
     const [showQR, setShowQR] = useState(false)
     const [invites, setInvites] = useState([])
     const [creatingInvite, setCreatingInvite] = useState(false)
     const [linkCopied, setLinkCopied] = useState(false)
 
-    const loadOrder = async () => {
+    const loadOrder = useCallback(async (showLoading = true) => {
+        if (showLoading) setLoading(true)
         try {
             const data = await api.get(`/orders/${id}`)
             setOrder(data)
         } catch {
-            addToast('Order not found', 'error')
-            navigate('/')
+            if (showLoading) {
+                addToast('Order not found', 'error')
+                navigate('/')
+            }
         } finally {
-            setLoading(false)
+            if (showLoading) setLoading(false)
         }
-    }
+    }, [id, addToast, navigate])
 
-    useEffect(() => { loadOrder() }, [id])
+    useEffect(() => {
+        loadOrder(true)
+        const interval = setInterval(() => loadOrder(false), 5000)
+        return () => clearInterval(interval)
+    }, [loadOrder])
+
+    const isCreator = user?.id === order?.creator?.id
+
+    // Load invite links if creator
+    const loadInvites = useCallback(async () => {
+        if (!isCreator || order?.status !== 'invite_only') return
+        try {
+            const data = await api.get(`/orders/${id}/invites`)
+            setInvites(data)
+        } catch { setInvites([]) }
+    }, [id, isCreator, order?.status])
+
+    useEffect(() => { loadInvites() }, [loadInvites])
 
     if (loading) return (
         <div className="detail-page">
@@ -55,23 +76,11 @@ export default function OrderDetail() {
     )
     if (!order) return null
 
-    const isCreator = user?.id === order.creator?.id
     const isParticipant = order.participants?.some((p) => p.user?.id === user?.id)
     const canJoin = !isParticipant && (
         order.status === 'open' ||
-        (order.status === 'invite_only' && !!inviteToken)
+        order.status === 'invite_only'
     )
-
-    // Load invite links if creator
-    const loadInvites = useCallback(async () => {
-        if (!isCreator || order.status !== 'invite_only') return
-        try {
-            const data = await api.get(`/orders/${id}/invites`)
-            setInvites(data)
-        } catch { setInvites([]) }
-    }, [id, isCreator, order.status])
-
-    useEffect(() => { loadInvites() }, [loadInvites])
 
     const handleJoin = async (e) => {
         e.preventDefault()
@@ -80,7 +89,7 @@ export default function OrderDetail() {
             const data = await api.post(`/orders/${id}/join`, {
                 note: joinNote || null,
                 items_summary: joinItems || null,
-                invite_token: inviteToken || null,
+                invite_token: inviteCode || null,
             })
             setOrder(data)
             setJoinNote('')
@@ -131,6 +140,17 @@ export default function OrderDetail() {
             await api.delete(`/orders/${id}/leave`)
             await loadOrder()
             addToast('You left the order', 'info')
+        } catch (err) {
+            addToast(err.message, 'error')
+        }
+    }
+
+    const handleKick = async (participantId) => {
+        if (!window.confirm('Are you sure you want to remove this user from the order?')) return;
+        try {
+            await api.delete(`/orders/${id}/participants/${participantId}`)
+            addToast('Participant removed', 'info')
+            await loadOrder()
         } catch (err) {
             addToast(err.message, 'error')
         }
@@ -187,7 +207,7 @@ export default function OrderDetail() {
                         </div>
                     </div>
                     <div className="detail-actions">
-                        {order.group_order_id && (
+                        {order.group_order_id && (isParticipant || isCreator) && (
                             <Button variant="ghost" size="sm" onClick={() => setShowQR(true)}>
                                 <QrCode size={16} />
                                 QR Code
@@ -363,8 +383,12 @@ export default function OrderDetail() {
                                             </div>
                                         )}
                                     </div>
-                                    {p.user?.id === order.creator?.id && (
+                                    {p.user?.id === order.creator?.id ? (
                                         <span className="participant-badge">Creator</span>
+                                    ) : isCreator && (
+                                        <Button variant="ghost" size="sm" onClick={() => handleKick(p.user?.id)} style={{ color: 'var(--accent-danger)' }}>
+                                            <UserMinus size={13} style={{ marginRight: 4 }} /> Kick
+                                        </Button>
                                     )}
                                 </div>
                             )
@@ -378,6 +402,20 @@ export default function OrderDetail() {
                                 <UserPlus size={14} style={{ display: 'inline', marginRight: 6 }} />
                                 Join this order
                             </div>
+                            {order.status === 'invite_only' && (
+                                <div className="form-group">
+                                    <label className="form-label" htmlFor="join-invite-code">Invite Code</label>
+                                    <input
+                                        id="join-invite-code"
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="e.g. xYz123"
+                                        value={inviteCode}
+                                        onChange={(e) => setInviteCode(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            )}
                             <div className="form-group">
                                 <label className="form-label" htmlFor="join-items">What are you ordering?</label>
                                 <input

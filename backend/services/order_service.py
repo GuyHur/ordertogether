@@ -201,6 +201,27 @@ async def leave_order(db: AsyncSession, order_id: str, user_id: str) -> bool:
     return True
 
 
+async def kick_participant(db: AsyncSession, order_id: str, creator_id: str, participant_id: str) -> bool:
+    """Remove a participant from an order (creator only)."""
+    order = await get_order_by_id(db, order_id)
+    if order is None or order.creator_id != creator_id:
+        return False
+
+    result = await db.execute(
+        select(OrderParticipant).where(
+            OrderParticipant.order_id == order_id,
+            OrderParticipant.user_id == participant_id,
+        )
+    )
+    participant = result.scalar_one_or_none()
+    if participant is None:
+        return False
+
+    await db.delete(participant)
+    await db.commit()
+    return True
+
+
 async def update_order(
     db: AsyncSession,
     order_id: str,

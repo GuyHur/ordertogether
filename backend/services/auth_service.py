@@ -91,7 +91,7 @@ async def authenticate_user(
     """Verify credentials via LDAP (if enabled) or local password, and return the user, or None."""
     # Try LDAP first when enabled (e.g. Windows domain)
     if settings.LDAP_ENABLED:
-        ldap_info = authenticate_ldap(email.strip(), password)
+        ldap_info = authenticate_ldap(username.strip(), password)
         if ldap_info is not None:
             return await get_or_sync_ldap_user(
                 db,
@@ -100,7 +100,7 @@ async def authenticate_user(
             )
 
     # Local auth
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(select(User).where(User.display_name == username.strip()))
     user = result.scalar_one_or_none()
     if user is None or not verify_password(password, user.password_hash):
         return None

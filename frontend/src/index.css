@@ -1,11 +1,10 @@
 /* ════════════════════════════════════════════════════════════════════════════
    OrderTogether — Design System + Multi-Theme Support
-   Themes: midnight (default), light, sunset, ocean, forest
+   Themes: light (default), midnight, sunset, ocean, forest
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* ── THEME: Midnight (default) ───────────────────────────────────────────── */
-[data-theme="midnight"],
-:root {
+/* ── THEME: Midnight ───────────────────────────────────────────── */
+html[data-theme="midnight"] {
   --bg-body: #0b0d1a;
   --bg-gradient: linear-gradient(145deg, #0e1025 0%, #131738 50%, #0d1129 100%);
   --bg-card: rgba(255, 255, 255, 0.04);
@@ -60,7 +59,7 @@
 }
 
 /* ── THEME: Dark ─────────────────────────────────────────────────────────── */
-[data-theme="dark"] {
+html[data-theme="dark"] {
   --bg-body: #121212;
   --bg-gradient: linear-gradient(145deg, #121212 0%, #1a1a1a 50%, #141414 100%);
   --bg-card: rgba(255, 255, 255, 0.05);
@@ -112,8 +111,9 @@
   --qr-fg: #121212;
 }
 
-/* ── THEME: Light ────────────────────────────────────────────────────────── */
-[data-theme="light"] {
+/* ── THEME: Light (default) ────────────────────────────────────────────────────────── */
+html[data-theme="light"],
+:root {
   --bg-body: #f5f7fb;
   --bg-gradient: linear-gradient(145deg, #eef2f9 0%, #e4eaf5 50%, #f0f4fb 100%);
   --bg-card: rgba(255, 255, 255, 0.85);
@@ -166,7 +166,7 @@
 }
 
 /* ── THEME: Sunset ────────────────────────────────────────────────────────── */
-[data-theme="sunset"] {
+html[data-theme="sunset"] {
   --bg-body: #1a0f1e;
   --bg-gradient: linear-gradient(145deg, #1f1225 0%, #2a1530 50%, #1c1028 100%);
   --bg-card: rgba(255, 255, 255, 0.05);
@@ -219,7 +219,7 @@
 }
 
 /* ── THEME: Ocean ─────────────────────────────────────────────────────────── */
-[data-theme="ocean"] {
+html[data-theme="ocean"] {
   --bg-body: #0a1628;
   --bg-gradient: linear-gradient(145deg, #0c1a2e 0%, #0f2035 50%, #0b1625 100%);
   --bg-card: rgba(255, 255, 255, 0.04);
@@ -272,7 +272,7 @@
 }
 
 /* ── THEME: Forest ────────────────────────────────────────────────────────── */
-[data-theme="forest"] {
+html[data-theme="forest"] {
   --bg-body: #0c1a0f;
   --bg-gradient: linear-gradient(145deg, #0f1e12 0%, #142518 50%, #0d1c10 100%);
   --bg-card: rgba(255, 255, 255, 0.04);

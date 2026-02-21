@@ -30,19 +30,21 @@ export default function Home() {
     }, [])
 
     useEffect(() => {
-        loadOrders()
+        loadOrders(true)
+        const interval = setInterval(() => loadOrders(false), 5000)
+        return () => clearInterval(interval)
     }, [filter])
 
-    async function loadOrders() {
-        setLoading(true)
+    async function loadOrders(showLoading = true) {
+        if (showLoading) setLoading(true)
         try {
             const params = filter ? `?status=${filter}` : ''
             const data = await api.get(`/orders${params}`)
             setOrders(data)
         } catch {
-            setOrders([])
+            if (showLoading) setOrders([])
         } finally {
-            setLoading(false)
+            if (showLoading) setLoading(false)
         }
     }
 

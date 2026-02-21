@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast/Toast'
 import Button from '../../components/Button/Button'
 import '../auth.css'
@@ -8,6 +9,7 @@ import './CreateOrder.css'
 
 export default function CreateOrder() {
     const navigate = useNavigate()
+    const { user } = useAuth()
     const { addToast } = useToast()
 
     const [services, setServices] = useState([])
@@ -19,7 +21,7 @@ export default function CreateOrder() {
         destination: '',
         order_link: '',
         group_order_id: '',
-        building: '',
+        building: user?.building || '',
         location_note: '',
         food_tags: [],
         deadline: '',

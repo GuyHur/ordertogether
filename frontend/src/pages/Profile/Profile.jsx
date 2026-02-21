@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast/Toast'
+import { api } from '../../services/api'
 import Button from '../../components/Button/Button'
 import '../auth.css'
 import './Profile.css'
@@ -19,7 +20,14 @@ export default function Profile() {
         building: user?.building || '',
         avatar_color: user?.avatar_color || '#63b3ed',
     })
+    const [buildings, setBuildings] = useState([])
     const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        api.get('/config')
+            .then((cfg) => setBuildings(cfg.buildings || []))
+            .catch(() => { })
+    }, [])
 
     const update = (field) => (e) =>
         setForm((prev) => ({ ...prev, [field]: e.target.value }))
@@ -78,14 +86,17 @@ export default function Profile() {
 
                     <div className="form-group">
                         <label className="form-label" htmlFor="profile-building">Building</label>
-                        <input
+                        <select
                             id="profile-building"
-                            type="text"
-                            className="form-input"
-                            placeholder="e.g. Building A, Floor 3"
+                            className="form-select"
                             value={form.building}
                             onChange={update('building')}
-                        />
+                        >
+                            <option value="">No building selected</option>
+                            {buildings.map((b) => (
+                                <option key={b} value={b}>{b}</option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="form-group">

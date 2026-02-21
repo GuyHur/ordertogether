@@ -1,9 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
 const THEMES = [
+    { id: 'light', label: 'Light', emoji: '☀️', description: 'Clean and bright' },
     { id: 'midnight', label: 'Midnight', emoji: '🌙', description: 'Deep indigo dark' },
     { id: 'dark', label: 'Dark', emoji: '🖤', description: 'Pure black & grey' },
-    { id: 'light', label: 'Light', emoji: '☀️', description: 'Clean and bright' },
     { id: 'sunset', label: 'Sunset', emoji: '🌅', description: 'Warm orange & purple' },
     { id: 'ocean', label: 'Ocean', emoji: '🌊', description: 'Deep sea cyan' },
     { id: 'forest', label: 'Forest', emoji: '🌲', description: 'Natural greens' },
@@ -16,9 +16,12 @@ const ThemeContext = createContext(undefined)
 export function ThemeProvider({ children }) {
     const [theme, setThemeState] = useState(() => {
         try {
-            return localStorage.getItem(STORAGE_KEY) || 'midnight'
+            const saved = localStorage.getItem(STORAGE_KEY)
+            if (saved) return saved
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+            return prefersDark ? 'midnight' : 'light'
         } catch {
-            return 'midnight'
+            return 'light'
         }
     })
 

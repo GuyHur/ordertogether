@@ -22,6 +22,7 @@ from services.order_service import (
     get_order_invites,
     get_user_orders,
     join_order,
+    kick_participant,
     leave_order,
     list_orders,
     revoke_invite,
@@ -214,6 +215,19 @@ async def leave_existing_order(order_id: str, current_user: CurrentUser, db: DB)
     success = await leave_order(db, order_id=order_id, user_id=current_user.id)
     if not success:
         raise HTTPException(status_code=404, detail="Not a participant of this order")
+
+
+@router.delete("/{order_id}/participants/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def kick_order_participant(order_id: str, user_id: str, current_user: CurrentUser, db: DB):
+    """Kick a participant from an order (creator only)."""
+    success = await kick_participant(
+        db, order_id=order_id, creator_id=current_user.id, participant_id=user_id
+    )
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to kick participant (not allowed, or participant not found)",
+        )
 
 
 @router.put("/{order_id}/status", response_model=OrderRead)

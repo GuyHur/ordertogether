@@ -13,11 +13,22 @@ export default function MyOrders() {
     const [tab, setTab] = useState('created')
 
     useEffect(() => {
-        api.get('/orders/mine')
-            .then(setData)
-            .catch(() => { })
-            .finally(() => setLoading(false))
+        loadMyOrders(true)
+        const interval = setInterval(() => loadMyOrders(false), 5000)
+        return () => clearInterval(interval)
     }, [])
+
+    async function loadMyOrders(showLoading = true) {
+        if (showLoading) setLoading(true)
+        try {
+            const result = await api.get('/orders/mine')
+            setData(result)
+        } catch {
+            // handle err if needed
+        } finally {
+            if (showLoading) setLoading(false)
+        }
+    }
 
     const orders = tab === 'created' ? data.created : data.joined
 
