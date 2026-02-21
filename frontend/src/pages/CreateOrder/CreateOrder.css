@@ -35,8 +35,20 @@
 
 .form-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--space-md);
+}
+
+.create-form .form-row .form-group {
+    min-width: 0;
+}
+
+.create-form #order-deadline,
+.create-form input[type="datetime-local"] {
+    margin: 0;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 /* ── Service picker ──────────────────────────────────────────────────── */
