@@ -5,6 +5,8 @@ from fastapi import APIRouter, HTTPException, Query, status
 from core.deps import DB, CurrentUser
 from models.order import OrderStatus
 from schemas.order import (
+    InviteCreate,
+    InviteRead,
     OrderCreate,
     OrderJoin,
     OrderListItem,
@@ -13,18 +15,28 @@ from schemas.order import (
     OrderUpdate,
 )
 from services.order_service import (
+    create_invite_link,
     create_order,
     delete_order,
     get_order_by_id,
+    get_order_invites,
     get_user_orders,
     join_order,
     leave_order,
     list_orders,
+    revoke_invite,
     update_order,
     update_order_status,
 )
 
 router = APIRouter(prefix="/api/orders", tags=["orders"])
+
+
+def _parse_tags(raw: str | None) -> list[str]:
+    """Parse comma-separated tags string into a list."""
+    if not raw:
+        return []
+    return [t.strip() for t in raw.split(",") if t.strip()]
 
 
 def _to_list_item(order) -> dict:
@@ -35,6 +47,9 @@ def _to_list_item(order) -> dict:
         "status": order.status.value if hasattr(order.status, "value") else order.status,
         "destination": order.destination,
         "group_order_id": order.group_order_id,
+        "building": order.building,
+        "location_note": order.location_note,
+        "food_tags": _parse_tags(order.food_tags),
         "deadline": order.deadline,
         "created_at": order.created_at,
         "creator": {
@@ -83,6 +98,8 @@ async def list_all_orders(
     status_filter: str | None = Query(None, alias="status"),
     service_id: str | None = None,
     building: str | None = None,
+    search: str | None = Query(None),
+    food_tag: str | None = Query(None),
 ):
     """List all orders, optionally filtered."""
     status_enum = None
@@ -92,7 +109,10 @@ async def list_all_orders(
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid status: {status_filter}")
 
-    orders = await list_orders(db, status=status_enum, service_id=service_id, building=building)
+    orders = await list_orders(
+        db, status=status_enum, service_id=service_id,
+        building=building, search=search, food_tag=food_tag,
+    )
     return [_to_list_item(o) for o in orders]
 
 
@@ -108,6 +128,9 @@ async def create_new_order(body: OrderCreate, current_user: CurrentUser, db: DB)
         destination=body.destination,
         order_link=body.order_link,
         group_order_id=body.group_order_id,
+        building=body.building,
+        location_note=body.location_note,
+        food_tags=body.food_tags,
         deadline=body.deadline,
     )
     return _to_read(order)
@@ -146,6 +169,9 @@ async def update_existing_order(
         destination=body.destination,
         order_link=body.order_link,
         group_order_id=body.group_order_id,
+        building=body.building,
+        location_note=body.location_note,
+        food_tags=",".join(body.food_tags) if body.food_tags else None,
         deadline=body.deadline,
     )
     if order is None:
@@ -173,6 +199,7 @@ async def join_existing_order(
             user=current_user,
             note=body.note,
             items_summary=body.items_summary,
+            invite_token=body.invite_token,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -204,3 +231,35 @@ async def change_order_status(
     if order is None:
         raise HTTPException(status_code=403, detail="Not allowed or order not found")
     return _to_read(order)
+
+
+# ── Invite link endpoints ────────────────────────────────────────────────
+
+@router.post("/{order_id}/invites", response_model=InviteRead, status_code=status.HTTP_201_CREATED)
+async def create_new_invite(
+    order_id: str, body: InviteCreate, current_user: CurrentUser, db: DB
+):
+    """Create an invite link for an invite_only order (creator only)."""
+    try:
+        invite = await create_invite_link(
+            db, order_id=order_id, user_id=current_user.id, max_uses=body.max_uses
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return invite
+
+
+@router.get("/{order_id}/invites", response_model=list[InviteRead])
+async def list_invites(order_id: str, current_user: CurrentUser, db: DB):
+    """List active invite links for an order (creator only)."""
+    return await get_order_invites(db, order_id=order_id, user_id=current_user.id)
+
+
+@router.delete("/{order_id}/invites/{invite_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def revoke_invite_link(
+    order_id: str, invite_id: str, current_user: CurrentUser, db: DB
+):
+    """Revoke a specific invite link (creator only)."""
+    success = await revoke_invite(db, order_id=order_id, invite_id=invite_id, user_id=current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Invite not found or not allowed")

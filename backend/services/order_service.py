@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from models.invite import InviteLink
 from models.order import Order, OrderParticipant, OrderStatus
 from models.user import User
 
@@ -19,6 +20,9 @@ async def create_order(
     destination: str | None = None,
     order_link: str | None = None,
     group_order_id: str | None = None,
+    building: str | None = None,
+    location_note: str | None = None,
+    food_tags: list[str] | None = None,
     deadline: datetime | None = None,
 ) -> Order:
     """Create a new group order."""
@@ -30,6 +34,9 @@ async def create_order(
         destination=destination,
         order_link=order_link,
         group_order_id=group_order_id,
+        building=building,
+        location_note=location_note,
+        food_tags=",".join(food_tags) if food_tags else None,
         deadline=deadline,
         status=OrderStatus.OPEN,
     )
@@ -69,8 +76,10 @@ async def list_orders(
     status: OrderStatus | None = None,
     service_id: str | None = None,
     building: str | None = None,
+    search: str | None = None,
+    food_tag: str | None = None,
 ) -> list[Order]:
-    """List orders, optionally filtered by status, service, or building."""
+    """List orders, optionally filtered by status, service, building, search text, or food tag."""
     query = (
         select(Order)
         .options(
@@ -86,7 +95,14 @@ async def list_orders(
     if service_id:
         query = query.where(Order.service_id == service_id)
     if building:
-        query = query.join(User, Order.creator_id == User.id).where(User.building == building)
+        query = query.where(Order.building == building)
+    if search:
+        pattern = f"%{search}%"
+        query = query.where(
+            Order.title.ilike(pattern) | Order.description.ilike(pattern)
+        )
+    if food_tag:
+        query = query.where(Order.food_tags.ilike(f"%{food_tag}%"))
 
     result = await db.execute(query)
     return list(result.scalars().all())
@@ -131,12 +147,24 @@ async def join_order(
     user: User,
     note: str | None = None,
     items_summary: str | None = None,
+    invite_token: str | None = None,
 ) -> OrderParticipant:
     """Add a user as a participant to an order."""
     order = await get_order_by_id(db, order_id)
     if order is None:
         raise ValueError("Order not found")
-    if order.status != OrderStatus.OPEN:
+
+    # Check status allows joining
+    if order.status == OrderStatus.INVITE_ONLY:
+        if not invite_token:
+            raise ValueError("This order requires an invite link to join")
+        # Validate the invite token
+        invite = await _get_invite_by_token(db, order_id, invite_token)
+        if invite is None:
+            raise ValueError("Invalid or expired invite link")
+        # Increment use count
+        invite.use_count += 1
+    elif order.status != OrderStatus.OPEN:
         raise ValueError("Order is no longer accepting participants")
 
     # Check if already joined
@@ -198,15 +226,21 @@ async def update_order_status(
     user_id: str,
     new_status: str,
 ) -> Order | None:
-    """Update order status (creator only)."""
+    """Update order status (creator only). Deactivates invite links when leaving invite_only."""
     order = await get_order_by_id(db, order_id)
     if order is None or order.creator_id != user_id:
         return None
+
+    old_status = order.status
 
     try:
         order.status = OrderStatus(new_status)
     except ValueError:
         raise ValueError(f"Invalid status: {new_status}")
+
+    # When leaving invite_only, deactivate all invite links
+    if old_status == OrderStatus.INVITE_ONLY and order.status != OrderStatus.INVITE_ONLY:
+        await _deactivate_all_invites(db, order_id)
 
     await db.commit()
     return await get_order_by_id(db, order_id)
@@ -219,5 +253,94 @@ async def delete_order(db: AsyncSession, order_id: str, user_id: str) -> bool:
         return False
 
     await db.delete(order)
+    await db.commit()
+    return True
+
+
+# ── Invite link helpers ──────────────────────────────────────────────────
+
+async def _get_invite_by_token(
+    db: AsyncSession, order_id: str, token: str
+) -> InviteLink | None:
+    """Look up an active, valid invite token for an order."""
+    result = await db.execute(
+        select(InviteLink).where(
+            InviteLink.order_id == order_id,
+            InviteLink.token == token,
+            InviteLink.is_active == True,  # noqa: E712
+        )
+    )
+    invite = result.scalar_one_or_none()
+    if invite is None or not invite.is_valid:
+        return None
+    return invite
+
+
+async def _deactivate_all_invites(db: AsyncSession, order_id: str) -> None:
+    """Deactivate every invite link for an order."""
+    result = await db.execute(
+        select(InviteLink).where(
+            InviteLink.order_id == order_id,
+            InviteLink.is_active == True,  # noqa: E712
+        )
+    )
+    for invite in result.scalars().all():
+        invite.is_active = False
+
+
+async def create_invite_link(
+    db: AsyncSession,
+    order_id: str,
+    user_id: str,
+    max_uses: int | None = None,
+) -> InviteLink:
+    """Create an invite link for an order (creator only, invite_only status)."""
+    order = await get_order_by_id(db, order_id)
+    if order is None:
+        raise ValueError("Order not found")
+    if order.creator_id != user_id:
+        raise ValueError("Only the order creator can create invite links")
+    if order.status != OrderStatus.INVITE_ONLY:
+        raise ValueError("Order must be in invite_only status to create invite links")
+
+    invite = InviteLink(order_id=order_id, max_uses=max_uses)
+    db.add(invite)
+    await db.commit()
+    await db.refresh(invite)
+    return invite
+
+
+async def get_order_invites(
+    db: AsyncSession, order_id: str, user_id: str
+) -> list[InviteLink]:
+    """List active invite links for an order (creator only)."""
+    order = await get_order_by_id(db, order_id)
+    if order is None or order.creator_id != user_id:
+        return []
+    result = await db.execute(
+        select(InviteLink)
+        .where(InviteLink.order_id == order_id, InviteLink.is_active == True)  # noqa: E712
+        .order_by(InviteLink.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def revoke_invite(
+    db: AsyncSession, order_id: str, invite_id: str, user_id: str
+) -> bool:
+    """Revoke a specific invite link (creator only)."""
+    order = await get_order_by_id(db, order_id)
+    if order is None or order.creator_id != user_id:
+        return False
+    result = await db.execute(
+        select(InviteLink).where(
+            InviteLink.id == invite_id,
+            InviteLink.order_id == order_id,
+        )
+    )
+    invite = result.scalar_one_or_none()
+    if invite is None:
+        return False
+    invite.is_active = False
     await db.commit()
     return True

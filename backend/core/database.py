@@ -20,6 +20,10 @@ async_session = async_sessionmaker(
 async def init_db() -> None:
     """Create all tables (dev convenience — use Alembic in prod)."""
     from models.base import Base  # noqa: F811
+    import models.user  # noqa: F401
+    import models.order  # noqa: F401
+    import models.delivery_service  # noqa: F401
+    import models.invite  # noqa: F401
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

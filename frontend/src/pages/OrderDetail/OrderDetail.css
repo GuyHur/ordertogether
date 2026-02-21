@@ -132,6 +132,67 @@
     margin-bottom: var(--space-xl);
 }
 
+/* ── Food tags ───────────────────────────────────────────────────────── */
+.detail-food-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: var(--space-xl);
+}
+
+.detail-food-tag {
+    display: inline-flex;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: var(--bg-card-hover);
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+}
+
+/* ── Invite section ──────────────────────────────────────────────────── */
+.invite-section {
+    margin-bottom: var(--space-xl);
+}
+
+.invite-actions {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.invite-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.invite-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: var(--border-card);
+    border-radius: var(--radius-md);
+}
+
+.invite-token {
+    font-family: monospace;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-accent);
+    letter-spacing: 0.04em;
+}
+
+.invite-meta {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-left: auto;
+    margin-right: var(--space-sm);
+}
+
 /* ── Participants ────────────────────────────────────────────────────── */
 .detail-section-title {
     font-size: var(--font-size-base);

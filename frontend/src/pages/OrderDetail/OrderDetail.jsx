@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState, useCallback } from 'react'
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
     ArrowLeft, Users, MapPin, Clock, ExternalLink,
-    Calendar, UserPlus, LogOut as LeaveIcon, Trash2, QrCode
+    Calendar, UserPlus, LogOut as LeaveIcon, Trash2 as TrashIcon, QrCode,
+    Share2, Building, Check, Copy, Link2, Plus
 } from 'lucide-react'
 import { api } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
@@ -13,13 +14,15 @@ import QRModal from '../../components/QRModal/QRModal'
 import '../auth.css'
 import './OrderDetail.css'
 
-const STATUS_FLOW = ['open', 'locked', 'ordered', 'delivered']
+const STATUS_FLOW = ['open', 'invite_only', 'locked', 'ordered', 'delivered']
 
 export default function OrderDetail() {
     const { id } = useParams()
     const { user } = useAuth()
     const { addToast } = useToast()
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
+    const inviteToken = searchParams.get('invite')
 
     const [order, setOrder] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -27,6 +30,9 @@ export default function OrderDetail() {
     const [joinItems, setJoinItems] = useState('')
     const [joining, setJoining] = useState(false)
     const [showQR, setShowQR] = useState(false)
+    const [invites, setInvites] = useState([])
+    const [creatingInvite, setCreatingInvite] = useState(false)
+    const [linkCopied, setLinkCopied] = useState(false)
 
     const loadOrder = async () => {
         try {
@@ -51,7 +57,21 @@ export default function OrderDetail() {
 
     const isCreator = user?.id === order.creator?.id
     const isParticipant = order.participants?.some((p) => p.user?.id === user?.id)
-    const canJoin = order.status === 'open' && !isParticipant
+    const canJoin = !isParticipant && (
+        order.status === 'open' ||
+        (order.status === 'invite_only' && !!inviteToken)
+    )
+
+    // Load invite links if creator
+    const loadInvites = useCallback(async () => {
+        if (!isCreator || order.status !== 'invite_only') return
+        try {
+            const data = await api.get(`/orders/${id}/invites`)
+            setInvites(data)
+        } catch { setInvites([]) }
+    }, [id, isCreator, order.status])
+
+    useEffect(() => { loadInvites() }, [loadInvites])
 
     const handleJoin = async (e) => {
         e.preventDefault()
@@ -60,6 +80,7 @@ export default function OrderDetail() {
             const data = await api.post(`/orders/${id}/join`, {
                 note: joinNote || null,
                 items_summary: joinItems || null,
+                invite_token: inviteToken || null,
             })
             setOrder(data)
             setJoinNote('')
@@ -69,6 +90,39 @@ export default function OrderDetail() {
             addToast(err.message, 'error')
         } finally {
             setJoining(false)
+        }
+    }
+
+    const handleCreateInvite = async (maxUses = null) => {
+        setCreatingInvite(true)
+        try {
+            await api.post(`/orders/${id}/invites`, { max_uses: maxUses })
+            addToast('Invite link created!', 'success')
+            await loadInvites()
+        } catch (err) {
+            addToast(err.message, 'error')
+        } finally {
+            setCreatingInvite(false)
+        }
+    }
+
+    const handleCopyInvite = async (token) => {
+        const url = `${window.location.origin}/order/${id}?invite=${token}`
+        try {
+            await navigator.clipboard.writeText(url)
+            addToast('Invite link copied!', 'success')
+        } catch {
+            addToast('Failed to copy link', 'error')
+        }
+    }
+
+    const handleRevokeInvite = async (inviteId) => {
+        try {
+            await api.delete(`/orders/${id}/invites/${inviteId}`)
+            addToast('Invite revoked', 'info')
+            await loadInvites()
+        } catch (err) {
+            addToast(err.message, 'error')
         }
     }
 
@@ -139,7 +193,28 @@ export default function OrderDetail() {
                                 QR Code
                             </Button>
                         )}
-                        <span className={`order-status ${order.status}`}>{order.status}</span>
+                        {isCreator && ['open', 'invite_only', 'locked', 'ordered'].includes(order.status) && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    const url = `${window.location.origin}/order/${order.id}`
+                                    navigator.clipboard.writeText(url)
+                                        .then(() => {
+                                            setLinkCopied(true)
+                                            addToast('Invite link copied to clipboard!', 'success')
+                                            setTimeout(() => setLinkCopied(false), 2500)
+                                        })
+                                        .catch(() => addToast('Failed to copy link', 'error'))
+                                }}
+                            >
+                                {linkCopied ? <Check size={16} /> : <Share2 size={16} />}
+                                {linkCopied ? 'Copied!' : 'Share Link'}
+                            </Button>
+                        )}
+                        <span className={`order-status ${order.status}`}>
+                            {order.status === 'invite_only' ? 'invite only' : order.status}
+                        </span>
                     </div>
                 </div>
 
@@ -198,7 +273,32 @@ export default function OrderDetail() {
                                 <div className="detail-meta-value">{formatDate(order.created_at)}</div>
                             </div>
                         </div>
+                        {order.building && (
+                            <div className="detail-meta-item">
+                                <div className="detail-meta-icon"><Building size={16} /></div>
+                                <div>
+                                    <div className="detail-meta-label">Building</div>
+                                    <div className="detail-meta-value">
+                                        {order.building}
+                                        {order.location_note && (
+                                            <span style={{ fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 4 }}>
+                                                — {order.location_note}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Food tags */}
+                    {order.food_tags && order.food_tags.length > 0 && (
+                        <div className="detail-food-tags">
+                            {order.food_tags.map((tag) => (
+                                <span key={tag} className="detail-food-tag">{tag}</span>
+                            ))}
+                        </div>
+                    )}
 
                     {/* Description */}
                     {order.description && (
@@ -220,12 +320,12 @@ export default function OrderDetail() {
                                         onClick={() => handleStatusChange(s)}
                                         disabled={order.status === s}
                                     >
-                                        {s}
+                                        {s.replace('_', ' ')}
                                     </Button>
                                 ))}
                             </div>
                             <Button variant="danger" size="sm" onClick={handleDelete}>
-                                <Trash2 size={14} /> Cancel
+                                <TrashIcon size={14} /> Cancel
                             </Button>
                         </div>
                     )}
@@ -307,7 +407,43 @@ export default function OrderDetail() {
                     )}
 
                     {/* Leave button */}
-                    {isParticipant && !isCreator && order.status === 'open' && (
+                    {/* Invite management (creator, invite_only) */}
+                    {isCreator && order.status === 'invite_only' && (
+                        <div className="invite-section">
+                            <div className="detail-section-title">
+                                <Link2 size={18} />
+                                Invite Links
+                            </div>
+                            <div className="invite-actions">
+                                <Button variant="primary" size="sm" onClick={() => handleCreateInvite(null)} loading={creatingInvite}>
+                                    <Plus size={14} /> Unlimited Use Link
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => handleCreateInvite(1)} loading={creatingInvite}>
+                                    <Plus size={14} /> Single Use Link
+                                </Button>
+                            </div>
+                            {invites.length > 0 && (
+                                <div className="invite-list">
+                                    {invites.map((inv) => (
+                                        <div key={inv.id} className="invite-row">
+                                            <div className="invite-token">{inv.token}</div>
+                                            <div className="invite-meta">
+                                                {inv.max_uses ? `${inv.use_count}/${inv.max_uses} uses` : `${inv.use_count} uses`}
+                                            </div>
+                                            <Button variant="ghost" size="sm" onClick={() => handleCopyInvite(inv.token)}>
+                                                <Copy size={13} /> Copy
+                                            </Button>
+                                            <Button variant="danger" size="sm" onClick={() => handleRevokeInvite(inv.id)}>
+                                                <TrashIcon size={13} />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {isParticipant && !isCreator && ['open', 'invite_only'].includes(order.status) && (
                         <div style={{ marginTop: 'var(--space-xl)' }}>
                             <Button variant="danger" size="sm" onClick={handleLeave}>
                                 <LeaveIcon size={14} /> Leave Order

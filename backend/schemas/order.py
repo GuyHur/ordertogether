@@ -24,6 +24,9 @@ class OrderCreate(BaseModel):
     destination: str | None = None
     order_link: str | None = None
     group_order_id: str | None = None
+    building: str | None = None
+    location_note: str | None = None
+    food_tags: list[str] | None = None
     deadline: datetime | None = None
 
 
@@ -33,16 +36,35 @@ class OrderUpdate(BaseModel):
     destination: str | None = None
     order_link: str | None = None
     group_order_id: str | None = None
+    building: str | None = None
+    location_note: str | None = None
+    food_tags: list[str] | None = None
     deadline: datetime | None = None
 
 
 class OrderStatusUpdate(BaseModel):
-    status: str  # "open", "locked", "ordered", "delivered", "cancelled"
+    status: str  # "open", "invite_only", "locked", "ordered", "delivered", "cancelled"
 
 
 class OrderJoin(BaseModel):
     note: str | None = None
     items_summary: str | None = None
+    invite_token: str | None = None  # required when order is invite_only
+
+
+class InviteCreate(BaseModel):
+    max_uses: int | None = None  # null = unlimited
+
+
+class InviteRead(BaseModel):
+    id: str
+    token: str
+    max_uses: int | None = None
+    use_count: int = 0
+    is_active: bool = True
+    created_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
 
 
 class ServiceSummary(BaseModel):
@@ -70,6 +92,9 @@ class OrderRead(BaseModel):
     destination: str | None = None
     order_link: str | None = None
     group_order_id: str | None = None
+    building: str | None = None
+    location_note: str | None = None
+    food_tags: list[str] = []
     deadline: datetime | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
@@ -87,6 +112,9 @@ class OrderListItem(BaseModel):
     status: str
     destination: str | None = None
     group_order_id: str | None = None
+    building: str | None = None
+    location_note: str | None = None
+    food_tags: list[str] = []
     deadline: datetime | None = None
     created_at: datetime | None = None
     creator: CreatorSummary

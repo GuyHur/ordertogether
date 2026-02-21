@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Users, MapPin, Clock } from 'lucide-react'
+import { Users, MapPin, Clock, Building } from 'lucide-react'
 import CountdownTimer from '../CountdownTimer/CountdownTimer'
 import './OrderCard.css'
 
@@ -33,8 +33,25 @@ export default function OrderCard({ order, style }) {
                         </div>
                     </div>
                 </div>
-                <span className={`order-status ${order.status}`}>{order.status}</span>
+                <span className={`order-status ${order.status}`}>
+                    {order.status === 'invite_only' ? 'invite only' : order.status}
+                </span>
             </div>
+
+            {/* Tags row */}
+            {(order.building || (order.food_tags && order.food_tags.length > 0)) && (
+                <div className="order-card-tags">
+                    {order.building && (
+                        <span className="order-card-building-tag">
+                            <Building size={11} />
+                            {order.building}
+                        </span>
+                    )}
+                    {order.food_tags?.map((tag) => (
+                        <span key={tag} className="order-card-food-tag">{tag}</span>
+                    ))}
+                </div>
+            )}
 
             {/* Meta */}
             <div className="order-card-meta">

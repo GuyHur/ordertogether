@@ -11,6 +11,7 @@ export default function CreateOrder() {
     const { addToast } = useToast()
 
     const [services, setServices] = useState([])
+    const [appConfig, setAppConfig] = useState({ buildings: [], food_tags: [] })
     const [form, setForm] = useState({
         service_id: '',
         title: '',
@@ -18,6 +19,9 @@ export default function CreateOrder() {
         destination: '',
         order_link: '',
         group_order_id: '',
+        building: '',
+        location_note: '',
+        food_tags: [],
         deadline: '',
     })
     const [loading, setLoading] = useState(false)
@@ -25,10 +29,20 @@ export default function CreateOrder() {
 
     useEffect(() => {
         api.get('/services').then(setServices).catch(() => { })
+        api.get('/config').then(setAppConfig).catch(() => { })
     }, [])
 
     const update = (field) => (e) =>
         setForm((prev) => ({ ...prev, [field]: e.target.value }))
+
+    const toggleTag = (tag) => {
+        setForm((prev) => ({
+            ...prev,
+            food_tags: prev.food_tags.includes(tag)
+                ? prev.food_tags.filter((t) => t !== tag)
+                : [...prev.food_tags, tag],
+        }))
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -51,6 +65,9 @@ export default function CreateOrder() {
                 destination: form.destination || null,
                 order_link: form.order_link || null,
                 group_order_id: form.group_order_id.trim().toUpperCase() || null,
+                building: form.building || null,
+                location_note: form.location_note || null,
+                food_tags: form.food_tags.length > 0 ? form.food_tags : null,
             }
             const order = await api.post('/orders', payload)
             addToast('Order created! Share it with your team.', 'success')
@@ -114,6 +131,54 @@ export default function CreateOrder() {
                     />
                 </div>
 
+                {/* Food tags */}
+                {appConfig.food_tags.length > 0 && (
+                    <div className="form-group">
+                        <label className="form-label">Food Tags</label>
+                        <div className="tag-picker">
+                            {appConfig.food_tags.map((tag) => (
+                                <button
+                                    key={tag}
+                                    type="button"
+                                    className={`tag-chip ${form.food_tags.includes(tag) ? 'active' : ''}`}
+                                    onClick={() => toggleTag(tag)}
+                                >
+                                    {tag}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Building + Location note */}
+                <div className="form-row">
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="order-building">Building</label>
+                        <select
+                            id="order-building"
+                            className="form-select"
+                            value={form.building}
+                            onChange={update('building')}
+                        >
+                            <option value="">Select building...</option>
+                            {appConfig.buildings.map((b) => (
+                                <option key={b} value={b}>{b}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="order-location">Location Note</label>
+                        <input
+                            id="order-location"
+                            type="text"
+                            className="form-input"
+                            placeholder="Room 3, Lobby A..."
+                            value={form.location_note}
+                            onChange={update('location_note')}
+                        />
+                    </div>
+                </div>
+
                 <div className="form-row">
                     {/* Destination */}
                     <div className="form-group">
@@ -122,7 +187,7 @@ export default function CreateOrder() {
                             id="order-dest"
                             type="text"
                             className="form-input"
-                            placeholder="Building A, Lobby"
+                            placeholder="Restaurant or address"
                             value={form.destination}
                             onChange={update('destination')}
                         />

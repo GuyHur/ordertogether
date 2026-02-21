@@ -10,6 +10,7 @@ from models.base import Base, TimestampMixin, UUIDMixin
 
 class OrderStatus(str, enum.Enum):
     OPEN = "open"
+    INVITE_ONLY = "invite_only"
     LOCKED = "locked"
     ORDERED = "ordered"
     DELIVERED = "delivered"
@@ -29,6 +30,9 @@ class Order(Base, UUIDMixin, TimestampMixin):
     destination: Mapped[str | None] = mapped_column(String(200), nullable=True)
     order_link: Mapped[str | None] = mapped_column(String(500), nullable=True)
     group_order_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    building: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    location_note: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    food_tags: Mapped[str | None] = mapped_column(String(500), nullable=True)  # comma-separated
     deadline: Mapped[str | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
@@ -36,6 +40,9 @@ class Order(Base, UUIDMixin, TimestampMixin):
     service = relationship("DeliveryService", lazy="selectin")
     participants = relationship(
         "OrderParticipant", back_populates="order", lazy="selectin", cascade="all, delete-orphan"
+    )
+    invite_links = relationship(
+        "InviteLink", back_populates="order", lazy="selectin", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:

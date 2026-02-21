@@ -25,5 +25,30 @@ class Settings(BaseSettings):
     APP_NAME: str = "OrderTogether"
     DEBUG: bool = True
 
+    # Preset buildings available for order targeting
+    BUILDINGS: list[str] = [
+        "Building A",
+        "Building B",
+        "Building C",
+        "Main Office",
+        "Warehouse",
+    ]
+
+    # Preset food tags for categorising orders
+    FOOD_TAGS: list[str] = [
+        "Pizza",
+        "Sushi",
+        "Burgers",
+        "Asian",
+        "Salads",
+        "Breakfast",
+        "Coffee",
+        "Desserts",
+        "Middle Eastern",
+        "Mexican",
+        "Italian",
+        "Vegan",
+    ]
+
 
 settings = Settings()

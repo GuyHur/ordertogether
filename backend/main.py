@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from core.config import settings
 from core.lifecycle import startup
-from routers import auth, orders, services, users
+from routers import auth, config, orders, services, users
 
 
 @asynccontextmanager
@@ -40,6 +40,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(services.router)
 app.include_router(orders.router)
+app.include_router(config.router)
 
 
 @app.get("/api/health")
