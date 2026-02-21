@@ -249,7 +249,7 @@ export default function OrderDetail() {
                                 <div key={p.id} className="participant-row">
                                     <div
                                         className="participant-avatar"
-                                        style={{ backgroundColor: p.user?.avatar_color || '#63b3ed' }}
+                                        style={{ backgroundColor: p.user?.avatar_color || 'var(--accent-primary)' }}
                                     >
                                         {init}
                                     </div>

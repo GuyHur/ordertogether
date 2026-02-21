@@ -17,7 +17,7 @@
     max-width: 480px;
     max-height: 85vh;
     overflow-y: auto;
-    background: rgba(18, 20, 42, 0.97);
+    background: var(--bg-navbar);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: var(--border-card);

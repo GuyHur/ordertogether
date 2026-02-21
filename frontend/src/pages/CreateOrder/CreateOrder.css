@@ -74,13 +74,13 @@
 
 .service-option:hover {
     background: var(--bg-card-hover);
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--border-color-input);
 }
 
 .service-option.selected {
-    background: rgba(99, 179, 237, 0.1);
-    border-color: rgba(99, 179, 237, 0.35);
-    box-shadow: 0 0 12px rgba(99, 179, 237, 0.1);
+    background: rgba(var(--accent-primary-rgb), 0.1);
+    border-color: rgba(var(--accent-primary-rgb), 0.35);
+    box-shadow: 0 0 12px rgba(var(--accent-primary-rgb), 0.1);
 }
 
 .service-option img {

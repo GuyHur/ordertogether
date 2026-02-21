@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './components/Toast/Toast'
 import Navbar from './components/Navbar/Navbar'
 import Home from './pages/Home/Home'
@@ -54,36 +55,38 @@ function AppLayout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ToastProvider>
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <PublicRoute>
-                  <Register />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </ToastProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <Routes>
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <Register />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </ToastProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   )
 }

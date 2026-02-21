@@ -4,7 +4,7 @@ SEED_SERVICES = [
     {
         "id": "wolt",
         "name": "Wolt",
-        "name_he": None,
+        "name_he": "וולט",
         "icon_url": "/api/icons/wolt.png",
         "site_url": "https://wolt.com/he/isr",
     },

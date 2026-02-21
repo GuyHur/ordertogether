@@ -54,7 +54,7 @@
     height: 52px;
     border-radius: var(--radius-md);
     object-fit: contain;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-card-hover);
     padding: 8px;
     flex-shrink: 0;
 }
@@ -196,7 +196,7 @@
     font-size: var(--font-size-xs);
     padding: 2px 8px;
     border-radius: var(--radius-full);
-    background: rgba(99, 179, 237, 0.1);
+    background: rgba(var(--accent-primary-rgb), 0.1);
     color: var(--accent-primary);
     font-weight: 600;
 }
@@ -208,8 +208,8 @@
     gap: var(--space-md);
     margin-top: var(--space-xl);
     padding: var(--space-lg);
-    background: rgba(104, 211, 145, 0.04);
-    border: 1px solid rgba(104, 211, 145, 0.15);
+    background: rgba(var(--accent-primary-rgb), 0.04);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.12);
     border-radius: var(--radius-lg);
 }
 
@@ -225,8 +225,8 @@
     align-items: center;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    background: rgba(99, 179, 237, 0.06);
-    border: 1px solid rgba(99, 179, 237, 0.15);
+    background: rgba(var(--accent-primary-rgb), 0.06);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.15);
     border-radius: var(--radius-sm);
     font-size: var(--font-size-sm);
     color: var(--text-accent);
@@ -235,7 +235,7 @@
 }
 
 .order-link-card:hover {
-    background: rgba(99, 179, 237, 0.12);
+    background: rgba(var(--accent-primary-rgb), 0.12);
 }
 
 /* ── Status selector ─────────────────────────────────────────────────── */

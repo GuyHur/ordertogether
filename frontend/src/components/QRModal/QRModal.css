@@ -10,8 +10,8 @@
     align-items: center;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    background: rgba(99, 179, 237, 0.06);
-    border: 1px solid rgba(99, 179, 237, 0.12);
+    background: rgba(var(--accent-primary-rgb), 0.06);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.12);
     border-radius: var(--radius-sm);
     font-family: 'SF Mono', 'Fira Code', monospace;
     font-size: var(--font-size-xs);
@@ -24,7 +24,7 @@
     padding: var(--space-lg);
     background: #ffffff;
     border-radius: var(--radius-lg);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-card);
     animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 

@@ -41,7 +41,7 @@ export default function OrderCard({ order, style }) {
                 <div className="order-card-creator">
                     <div
                         className="order-card-avatar"
-                        style={{ backgroundColor: order.creator?.avatar_color || '#63b3ed' }}
+                        style={{ backgroundColor: order.creator?.avatar_color || 'var(--accent-primary)' }}
                     >
                         {initials}
                     </div>

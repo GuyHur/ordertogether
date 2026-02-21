@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Home, PlusCircle, ClipboardList, User, LogOut } from 'lucide-react'
+import { Home, PlusCircle, ClipboardList, User, LogOut, Palette } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import './Navbar.css'
 
 export default function Navbar() {
     const { user, logout } = useAuth()
+    const { theme, setTheme, themes } = useTheme()
     const [showMenu, setShowMenu] = useState(false)
     const menuRef = useRef(null)
     const navigate = useNavigate()
@@ -59,7 +61,7 @@ export default function Navbar() {
                 <div className="navbar-user-menu" ref={menuRef}>
                     <div
                         className="navbar-avatar"
-                        style={{ backgroundColor: user?.avatar_color || '#63b3ed' }}
+                        style={{ backgroundColor: user?.avatar_color || 'var(--accent-primary)' }}
                         onClick={() => setShowMenu(!showMenu)}
                     >
                         {initials}
@@ -71,6 +73,27 @@ export default function Navbar() {
                                 <div className="dropdown-user-name">{user?.display_name}</div>
                                 <div className="dropdown-user-email">{user?.email}</div>
                             </div>
+                            <div className="dropdown-divider" />
+
+                            {/* Theme picker */}
+                            <div className="dropdown-section-label">
+                                <Palette size={13} />
+                                Theme
+                            </div>
+                            <div className="theme-picker">
+                                {themes.map((t) => (
+                                    <button
+                                        key={t.id}
+                                        className={`theme-option ${theme === t.id ? 'active' : ''}`}
+                                        onClick={() => setTheme(t.id)}
+                                        title={t.description}
+                                    >
+                                        <span className="theme-emoji">{t.emoji}</span>
+                                        <span className="theme-label">{t.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+
                             <div className="dropdown-divider" />
                             <Link
                                 to="/profile"

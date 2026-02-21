@@ -28,7 +28,7 @@
     font-size: var(--font-size-3xl);
     font-weight: 800;
     letter-spacing: -0.03em;
-    background: linear-gradient(135deg, #63b3ed 0%, #b794f4 100%);
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-purple) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -78,18 +78,18 @@
 
 .form-input:focus {
     background: var(--bg-input-focus);
-    border-color: rgba(99, 179, 237, 0.5);
-    box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+    border-color: rgba(var(--accent-primary-rgb), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.1);
 }
 
 .form-input:hover:not(:focus) {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--border-color-input);
 }
 
 .form-error {
     padding: var(--space-sm) var(--space-md);
-    background: rgba(252, 129, 129, 0.08);
-    border: 1px solid rgba(252, 129, 129, 0.2);
+    background: rgba(var(--accent-primary-rgb), 0.04);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.12);
     border-radius: var(--radius-sm);
     color: var(--accent-danger);
     font-size: var(--font-size-sm);
@@ -125,8 +125,8 @@
 
 .form-textarea:focus {
     background: var(--bg-input-focus);
-    border-color: rgba(99, 179, 237, 0.5);
-    box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+    border-color: rgba(var(--accent-primary-rgb), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.1);
 }
 
 /* ── Select ──────────────────────────────────────────────────────────── */
@@ -150,11 +150,11 @@
 
 .form-select:focus {
     background-color: var(--bg-input-focus);
-    border-color: rgba(99, 179, 237, 0.5);
-    box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+    border-color: rgba(var(--accent-primary-rgb), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.1);
 }
 
 .form-select option {
-    background: #1a1d35;
+    background: var(--bg-body);
     color: var(--text-primary);
 }

@@ -77,8 +77,8 @@
 
 .qr-input-field:focus {
     background: var(--bg-input-focus);
-    border-color: rgba(99, 179, 237, 0.5);
-    box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+    border-color: rgba(var(--accent-primary-rgb), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.1);
 }
 
 /* ── URL preview ─────────────────────────────────────────────────────── */
@@ -87,8 +87,8 @@
     align-items: center;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    background: rgba(99, 179, 237, 0.06);
-    border: 1px solid rgba(99, 179, 237, 0.12);
+    background: rgba(var(--accent-primary-rgb), 0.06);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.12);
     border-radius: var(--radius-sm);
     margin-bottom: var(--space-xl);
     font-family: 'SF Mono', 'Fira Code', monospace;
@@ -111,12 +111,12 @@
     padding: var(--space-xl);
     background: #ffffff;
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-elevated), 0 0 40px rgba(99, 179, 237, 0.08);
+    box-shadow: var(--shadow-elevated), 0 0 40px rgba(var(--accent-primary-rgb), 0.08);
     transition: box-shadow var(--transition-normal);
 }
 
 .qr-canvas-wrapper:hover {
-    box-shadow: var(--shadow-elevated), 0 0 60px rgba(99, 179, 237, 0.15);
+    box-shadow: var(--shadow-elevated), 0 0 60px rgba(var(--accent-primary-rgb), 0.15);
 }
 
 .qr-actions {
@@ -143,7 +143,7 @@
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-xl);
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-card);
     border: var(--border-subtle);
     color: var(--text-muted);
     animation: float 4s ease-in-out infinite;
@@ -160,8 +160,8 @@
 .qr-hint {
     margin-top: var(--space-xl);
     padding: var(--space-md) var(--space-lg);
-    background: rgba(246, 173, 85, 0.05);
-    border: 1px solid rgba(246, 173, 85, 0.12);
+    background: rgba(var(--accent-primary-rgb), 0.04);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.1);
     border-radius: var(--radius-md);
     font-size: var(--font-size-xs);
     color: var(--text-secondary);
