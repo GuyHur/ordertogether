@@ -11,6 +11,7 @@ import { useToast } from '../../components/Toast/Toast'
 import Button from '../../components/Button/Button'
 import CountdownTimer from '../../components/CountdownTimer/CountdownTimer'
 import QRModal from '../../components/QRModal/QRModal'
+import Avatar from '../../components/Avatar/Avatar'
 import '../auth.css'
 import './OrderDetail.css'
 
@@ -391,21 +392,9 @@ export default function OrderDetail() {
 
                     <div className="participants-list">
                         {order.participants?.map((p) => {
-                            const init = p.user?.display_name
-                                ?.split(' ')
-                                .map((w) => w[0])
-                                .slice(0, 2)
-                                .join('')
-                                .toUpperCase() || '?'
-
                             return (
                                 <div key={p.id} className="participant-row">
-                                    <div
-                                        className="participant-avatar"
-                                        style={{ backgroundColor: p.user?.avatar_color || 'var(--accent-primary)' }}
-                                    >
-                                        {init}
-                                    </div>
+                                    <Avatar user={p.user} className="participant-avatar" />
                                     <div className="participant-info">
                                         <div className="participant-name">{p.user?.display_name}</div>
                                         {(p.note || p.items_summary) && (

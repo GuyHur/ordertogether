@@ -1,6 +1,6 @@
 """Order business logic."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from models.invite import InviteLink
 from models.order import Order, OrderParticipant, OrderStatus
 from models.user import User
+from core.config import settings
 
 
 async def create_order(
@@ -80,6 +81,8 @@ async def list_orders(
     food_tag: str | None = None,
 ) -> list[Order]:
     """List orders, optionally filtered by status, service, building, search text, or food tag."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=settings.ORDER_EXPIRATION_HOURS)
+    
     query = (
         select(Order)
         .options(
@@ -87,6 +90,7 @@ async def list_orders(
             selectinload(Order.service),
             selectinload(Order.participants).selectinload(OrderParticipant.user),
         )
+        .where(Order.created_at >= cutoff)
         .order_by(Order.created_at.desc())
     )
 
@@ -110,6 +114,8 @@ async def list_orders(
 
 async def get_user_orders(db: AsyncSession, user_id: str) -> dict:
     """Get orders created by and joined by a user."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=settings.ORDER_EXPIRATION_HOURS)
+    
     # Created orders
     created_result = await db.execute(
         select(Order)
@@ -119,6 +125,7 @@ async def get_user_orders(db: AsyncSession, user_id: str) -> dict:
             selectinload(Order.participants).selectinload(OrderParticipant.user),
         )
         .where(Order.creator_id == user_id)
+        .where(Order.created_at >= cutoff)
         .order_by(Order.created_at.desc())
     )
     created = list(created_result.scalars().all())
@@ -134,6 +141,7 @@ async def get_user_orders(db: AsyncSession, user_id: str) -> dict:
         .join(OrderParticipant, Order.id == OrderParticipant.order_id)
         .where(OrderParticipant.user_id == user_id)
         .where(Order.creator_id != user_id)
+        .where(Order.created_at >= cutoff)
         .order_by(Order.created_at.desc())
     )
     joined = list(joined_result.scalars().all())

@@ -4,6 +4,7 @@ import { Home, PlusCircle, ClipboardList, User, LogOut, Palette, Bell, Settings 
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { api } from '../../services/api'
+import Avatar from '../Avatar/Avatar'
 import './Navbar.css'
 
 export default function Navbar() {
@@ -142,12 +143,8 @@ export default function Navbar() {
                     </NavLink>
                 )}
                 <div className="navbar-user-menu" ref={menuRef}>
-                    <div
-                        className="navbar-avatar"
-                        style={{ backgroundColor: user?.avatar_color || 'var(--accent-primary)' }}
-                        onClick={() => setShowMenu(!showMenu)}
-                    >
-                        {initials}
+                    <div onClick={() => setShowMenu(!showMenu)} style={{ cursor: 'pointer', display: 'flex' }}>
+                        <Avatar user={user} className="navbar-avatar" />
                     </div>
 
                     {showMenu && (

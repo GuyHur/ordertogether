@@ -1,16 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Users, MapPin, Clock, Building } from 'lucide-react'
 import CountdownTimer from '../CountdownTimer/CountdownTimer'
+import Avatar from '../Avatar/Avatar'
 import './OrderCard.css'
 
 export default function OrderCard({ order, style }) {
-    const initials = order.creator?.display_name
-        ?.split(' ')
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase() || '?'
-
     const isUrgent =
         order.deadline &&
         order.status === 'open' &&
@@ -56,12 +50,7 @@ export default function OrderCard({ order, style }) {
             {/* Meta */}
             <div className="order-card-meta">
                 <div className="order-card-creator">
-                    <div
-                        className="order-card-avatar"
-                        style={{ backgroundColor: order.creator?.avatar_color || 'var(--accent-primary)' }}
-                    >
-                        {initials}
-                    </div>
+                    <Avatar user={order.creator} className="order-card-avatar" />
                     <span className="order-card-meta-item">
                         {order.creator?.display_name}
                     </span>

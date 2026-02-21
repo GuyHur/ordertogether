@@ -3,6 +3,7 @@ import { PlusCircle, Trash2, Building, Tag, Truck, Users, Shield, ShieldOff } fr
 import { api } from '../../services/api'
 import { useToast } from '../../components/Toast/Toast'
 import { useAuth } from '../../context/AuthContext'
+import Avatar from '../../components/Avatar/Avatar'
 import Button from '../../components/Button/Button'
 import './Admin.css'
 
@@ -137,12 +138,7 @@ export default function Admin() {
                         {users.map(u => (
                             <div key={u.id} className="admin-list-item">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <div
-                                        className="navbar-avatar"
-                                        style={{ backgroundColor: u.avatar_color || 'var(--accent-primary)', width: 32, height: 32, fontSize: 14 }}
-                                    >
-                                        {u.display_name.charAt(0).toUpperCase()}
-                                    </div>
+                                    <Avatar user={u} className="navbar-avatar" style={{ width: 32, height: 32, fontSize: 14 }} />
                                     <div>
                                         <div style={{ fontWeight: 500 }}>
                                             {u.display_name}

@@ -62,6 +62,8 @@ class Settings(BaseSettings):
     # App
     APP_NAME: str = "OrderTogether"
     DEBUG: bool = True
+    AVATAR_URL_TEMPLATE: str | None = None
+    ORDER_EXPIRATION_HOURS: int = 24
 
     # Preset buildings available for order targeting
     BUILDINGS: list[str] = [
