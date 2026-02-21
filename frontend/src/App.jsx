@@ -1,52 +1,92 @@
-import { useEffect, useState } from 'react'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
+import { ToastProvider } from './components/Toast/Toast'
+import Navbar from './components/Navbar/Navbar'
+import Home from './pages/Home/Home'
+import Login from './pages/Login/Login'
+import Register from './pages/Register/Register'
+import CreateOrder from './pages/CreateOrder/CreateOrder'
+import OrderDetail from './pages/OrderDetail/OrderDetail'
+import MyOrders from './pages/MyOrders/MyOrders'
+import Profile from './pages/Profile/Profile'
 
-function App() {
-  const [services, setServices] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth()
 
-  useEffect(() => {
-    fetch('/api/services')
-      .then((res) => {
-        if (!res.ok) throw new Error(res.statusText)
-        return res.json()
-      })
-      .then(setServices)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [])
-
-  if (loading) return <div className="loading">Loading…</div>
-  if (error) return <div className="error">Error: {error}</div>
-
-  return (
-    <main className="page">
-      <h1 className="title">OrderTogether</h1>
-      <p className="subtitle">Order together from your favorite delivery apps</p>
-      <div className="icons">
-        {services.map((service) => (
-          <a
-            key={service.id}
-            href={service.site_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="icon-card"
-            aria-label={service.name_he || service.name}
-          >
-            <img
-              src={service.icon_url}
-              alt=""
-              width={64}
-              height={64}
-              className="icon-img"
-            />
-            <span className="icon-name">{service.name_he || service.name}</span>
-          </a>
-        ))}
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'var(--text-secondary)',
+      }}>
+        Loading…
       </div>
-    </main>
+    )
+  }
+
+  return user ? children : <Navigate to="/login" replace />
+}
+
+function PublicRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return null
+  return user ? <Navigate to="/" replace /> : children
+}
+
+function AppLayout() {
+  return (
+    <>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/create" element={<CreateOrder />} />
+        <Route path="/order/:id" element={<OrderDetail />} />
+        <Route path="/my-orders" element={<MyOrders />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <Routes>
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <Register />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </ToastProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  )
+}
