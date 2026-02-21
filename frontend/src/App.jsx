@@ -11,6 +11,7 @@ import OrderDetail from './pages/OrderDetail/OrderDetail'
 import MyOrders from './pages/MyOrders/MyOrders'
 import Profile from './pages/Profile/Profile'
 import Admin from './pages/Admin/Admin'
+import BIDashboard from './pages/BI/BIDashboard'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -55,6 +56,7 @@ function AppLayout() {
         <Route path="/my-orders" element={<MyOrders />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+        <Route path="/admin/bi" element={<AdminRoute><BIDashboard /></AdminRoute>} />
       </Routes>
     </>
   )

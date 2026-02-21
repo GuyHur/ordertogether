@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
-import { PlusCircle, Trash2, Building, Tag, Truck, Users, Shield, ShieldOff } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { PlusCircle, Trash2, Building, Tag, Truck, Users, Shield, ShieldOff, Activity } from 'lucide-react'
 import { api } from '../../services/api'
 import { useToast } from '../../components/Toast/Toast'
 import { useAuth } from '../../context/AuthContext'
@@ -128,7 +129,12 @@ export default function Admin() {
 
     return (
         <div className="admin-page">
-            <h1 className="page-title">Admin Dashboard</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xl)' }}>
+                <h1 className="page-title" style={{ margin: 0 }}>Admin Dashboard</h1>
+                <Link to="/admin/bi" className="btn btn-primary" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <Activity size={18} /> BI Dashboard
+                </Link>
+            </div>
 
             {/* Users (Superuser Only) */}
             {user?.is_superuser && (
