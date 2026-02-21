@@ -32,7 +32,6 @@ OrderTogether is a web application for coordinating group food delivery orders w
    ```
    App: http://localhost:5173 (proxies `/api` to the backend).
 
-<<<<<<< Updated upstream
 ## Running Locally
 
 ### Prerequisites
@@ -100,4 +99,3 @@ You can sync login with your Windows domain (Active Directory) so users sign in 
 3. On first LDAP login, a user record is created or updated in the app (display name from AD). Existing local users can also sign in via LDAP; their record is then linked to LDAP.
 
 The same login form is used: users enter email (or Windows username if you set `LDAP_USER_SEARCH_ATTRIBUTE`/alt to support it) and password. No frontend changes required.
->>>>>>> Stashed changes
