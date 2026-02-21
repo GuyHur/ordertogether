@@ -1,15 +1,32 @@
+"""OrderTogether API — Application entry-point."""
+
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 
-app = FastAPI(title="OrderTogether API")
+from core.config import settings
+from core.lifecycle import startup
+from routers import auth, orders, services, users
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Run startup tasks, then yield until shutdown."""
+    await startup()
+    yield
+
+
+app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
+
+# ── Static files ─────────────────────────────────────────────────────────────
 icons_dir = Path(__file__).parent / "static" / "icons"
-app.mount("/api/icons", StaticFiles(directory=str(icons_dir)), name="icons")
+if icons_dir.exists():
+    app.mount("/api/icons", StaticFiles(directory=str(icons_dir)), name="icons")
 
+# ── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -18,38 +35,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-class DeliveryService(BaseModel):
-    id: str
-    name: str
-    name_he: str | None
-    icon_url: str
-    site_url: str
+# ── Routers ──────────────────────────────────────────────────────────────────
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(services.router)
+app.include_router(orders.router)
 
 
-@app.get("/api/services", response_model=list[DeliveryService])
-async def get_services():
-    """Return the delivery services shown on the OrderTogether page."""
-    return [
-        DeliveryService(
-            id="wolt",
-            name="Wolt",
-            name_he=None,
-            icon_url="/api/icons/wolt.svg",
-            site_url="https://wolt.com/he/isr",
-        ),
-        DeliveryService(
-            id="tenbis",
-            name="Tenbis",
-            name_he="תן ביס",
-            icon_url="/api/icons/tenbis.svg",
-            site_url="https://www.10bis.co.il",
-        ),
-        DeliveryService(
-            id="mishloha",
-            name="Mishloha",
-            name_he="משלוחה",
-            icon_url="/api/icons/mishloha.svg",
-            site_url="https://mishloha.co.il",
-        ),
-    ]
+@app.get("/api/health")
+async def health():
+    """Health-check endpoint."""
+    return {"status": "ok", "app": settings.APP_NAME}

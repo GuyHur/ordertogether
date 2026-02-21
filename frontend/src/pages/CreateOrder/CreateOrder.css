@@ -1,0 +1,99 @@
+.create-page {
+    padding: calc(var(--navbar-height) + var(--space-2xl)) var(--space-xl) var(--space-2xl);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.create-page .page-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-xs);
+    animation: fadeIn 0.4s ease;
+}
+
+.create-page .page-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2xl);
+    animation: fadeIn 0.4s ease 0.05s both;
+}
+
+.create-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--border-card);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-2xl);
+    animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+/* ── Service picker ──────────────────────────────────────────────────── */
+.service-picker {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.service-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    border: var(--border-card);
+    background: var(--bg-input);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-width: 90px;
+}
+
+.service-option:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.service-option.selected {
+    background: rgba(99, 179, 237, 0.1);
+    border-color: rgba(99, 179, 237, 0.35);
+    box-shadow: 0 0 12px rgba(99, 179, 237, 0.1);
+}
+
+.service-option img {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    object-fit: contain;
+}
+
+.service-option span {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.service-option.selected span {
+    color: var(--text-accent);
+}
+
+@media (max-width: 640px) {
+    .create-page {
+        padding: calc(var(--navbar-height) + var(--space-lg)) var(--space-md) var(--space-lg);
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}

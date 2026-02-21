@@ -1,0 +1,161 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { api } from '../../services/api'
+import { useToast } from '../../components/Toast/Toast'
+import Button from '../../components/Button/Button'
+import '../auth.css'
+import './CreateOrder.css'
+
+export default function CreateOrder() {
+    const navigate = useNavigate()
+    const { addToast } = useToast()
+
+    const [services, setServices] = useState([])
+    const [form, setForm] = useState({
+        service_id: '',
+        title: '',
+        description: '',
+        destination: '',
+        order_link: '',
+        deadline: '',
+    })
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState('')
+
+    useEffect(() => {
+        api.get('/services').then(setServices).catch(() => { })
+    }, [])
+
+    const update = (field) => (e) =>
+        setForm((prev) => ({ ...prev, [field]: e.target.value }))
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        if (!form.service_id) {
+            setError('Please select a delivery service')
+            return
+        }
+        if (!form.title.trim()) {
+            setError('Please enter a title')
+            return
+        }
+
+        setError('')
+        setLoading(true)
+        try {
+            const payload = {
+                ...form,
+                deadline: form.deadline ? new Date(form.deadline).toISOString() : null,
+                description: form.description || null,
+                destination: form.destination || null,
+                order_link: form.order_link || null,
+            }
+            const order = await api.post('/orders', payload)
+            addToast('Order created! Share it with your team.', 'success')
+            navigate(`/order/${order.id}`)
+        } catch (err) {
+            setError(err.message || 'Failed to create order')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return (
+        <div className="create-page">
+            <h1 className="page-title">Create Group Order</h1>
+            <p className="page-subtitle">Pick a service and invite your colleagues to join</p>
+
+            <form className="create-form" onSubmit={handleSubmit}>
+                {error && <div className="form-error">{error}</div>}
+
+                {/* Service picker */}
+                <div className="form-group">
+                    <label className="form-label">Delivery Service</label>
+                    <div className="service-picker">
+                        {services.map((svc) => (
+                            <div
+                                key={svc.id}
+                                className={`service-option ${form.service_id === svc.id ? 'selected' : ''}`}
+                                onClick={() => setForm((p) => ({ ...p, service_id: svc.id }))}
+                            >
+                                <img src={svc.icon_url} alt={svc.name} />
+                                <span>{svc.name_he || svc.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Title */}
+                <div className="form-group">
+                    <label className="form-label" htmlFor="order-title">Order Title</label>
+                    <input
+                        id="order-title"
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. Lunch from Wolt — Building A"
+                        value={form.title}
+                        onChange={update('title')}
+                        required
+                    />
+                </div>
+
+                {/* Description */}
+                <div className="form-group">
+                    <label className="form-label" htmlFor="order-desc">Description (optional)</label>
+                    <textarea
+                        id="order-desc"
+                        className="form-textarea"
+                        placeholder="Any details about the order..."
+                        value={form.description}
+                        onChange={update('description')}
+                        rows={3}
+                    />
+                </div>
+
+                <div className="form-row">
+                    {/* Destination */}
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="order-dest">Destination</label>
+                        <input
+                            id="order-dest"
+                            type="text"
+                            className="form-input"
+                            placeholder="Building A, Lobby"
+                            value={form.destination}
+                            onChange={update('destination')}
+                        />
+                    </div>
+
+                    {/* Deadline */}
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="order-deadline">Deadline</label>
+                        <input
+                            id="order-deadline"
+                            type="datetime-local"
+                            className="form-input"
+                            value={form.deadline}
+                            onChange={update('deadline')}
+                        />
+                    </div>
+                </div>
+
+                {/* External link */}
+                <div className="form-group">
+                    <label className="form-label" htmlFor="order-link">Shared Cart Link (optional)</label>
+                    <input
+                        id="order-link"
+                        type="url"
+                        className="form-input"
+                        placeholder="https://wolt.com/group/..."
+                        value={form.order_link}
+                        onChange={update('order_link')}
+                    />
+                </div>
+
+                <Button type="submit" variant="primary" block size="lg" loading={loading}>
+                    Create Order
+                </Button>
+            </form>
+        </div>
+    )
+}
