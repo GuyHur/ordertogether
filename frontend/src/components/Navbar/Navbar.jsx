@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Home, PlusCircle, ClipboardList, User, LogOut, Palette, Bell, Settings } from 'lucide-react'
+import { Home, PlusCircle, ClipboardList, User, LogOut, Palette, Bell, Settings, Sun, Moon } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { api } from '../../services/api'
@@ -155,20 +155,36 @@ export default function Navbar() {
                             </div>
                             <div className="dropdown-divider" />
 
-                            {/* Theme picker */}
+                            {/* Theme pickers */}
                             <div className="dropdown-section-label">
-                                <Palette size={13} />
-                                Theme
+                                <Sun size={13} />
+                                Light Themes
                             </div>
                             <div className="theme-picker">
-                                {themes.map((t) => (
+                                {themes.filter(t => t.type === 'light').map((t) => (
                                     <button
                                         key={t.id}
                                         className={`theme-option ${theme === t.id ? 'active' : ''}`}
                                         onClick={() => setTheme(t.id)}
                                         title={t.description}
                                     >
-                                        <span className="theme-emoji">{t.emoji}</span>
+                                        <span className="theme-label">{t.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="dropdown-section-label" style={{ marginTop: '8px' }}>
+                                <Moon size={13} />
+                                Dark Themes
+                            </div>
+                            <div className="theme-picker">
+                                {themes.filter(t => t.type === 'dark').map((t) => (
+                                    <button
+                                        key={t.id}
+                                        className={`theme-option ${theme === t.id ? 'active' : ''}`}
+                                        onClick={() => setTheme(t.id)}
+                                        title={t.description}
+                                    >
                                         <span className="theme-label">{t.label}</span>
                                     </button>
                                 ))}

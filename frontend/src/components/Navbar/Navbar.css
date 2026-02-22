@@ -177,8 +177,8 @@
 .theme-picker {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    padding: 2px var(--space-sm) var(--space-sm);
+    gap: 6px;
+    padding: 2px var(--space-md) var(--space-sm);
 }
 
 .theme-option {
@@ -205,11 +205,6 @@
     background: rgba(var(--accent-primary-rgb), 0.1);
     border-color: rgba(var(--accent-primary-rgb), 0.25);
     color: var(--text-accent);
-}
-
-.theme-emoji {
-    font-size: 14px;
-    line-height: 1;
 }
 
 .theme-label {
