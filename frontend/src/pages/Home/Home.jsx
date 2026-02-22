@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { PlusCircle, ShoppingBag, Search } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { PlusCircle, ShoppingBag, Search, Sparkles } from 'lucide-react'
 import { api } from '../../services/api'
 import OrderCard from '../../components/OrderCard/OrderCard'
 import EmptyState from '../../components/EmptyState/EmptyState'
 import Button from '../../components/Button/Button'
+import { useToast } from '../../components/Toast/Toast'
 import './Home.css'
 
 const STATUS_FILTERS = [
@@ -17,6 +18,8 @@ const STATUS_FILTERS = [
 ]
 
 export default function Home() {
+    const navigate = useNavigate()
+    const { addToast } = useToast()
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('')
@@ -74,6 +77,16 @@ export default function Home() {
         return result
     }, [orders, searchText, buildingFilter, tagFilter])
 
+    const handleFeelingLucky = () => {
+        const openOrders = orders.filter((o) => o.status === 'open')
+        if (openOrders.length === 0) {
+            addToast('No active orders to join right now!', 'error')
+            return
+        }
+        const randomOrder = openOrders[Math.floor(Math.random() * openOrders.length)]
+        navigate(`/order/${randomOrder.id}`)
+    }
+
     return (
         <div className="home-page">
             <div className="home-header">
@@ -99,6 +112,13 @@ export default function Home() {
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                 />
+                <button
+                    className="feeling-lucky-btn"
+                    onClick={handleFeelingLucky}
+                    title="Jump to a random open order"
+                >
+                    Can't choose?
+                </button>
             </div>
 
             {/* Filters row */}

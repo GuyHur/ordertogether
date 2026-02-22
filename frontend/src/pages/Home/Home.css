@@ -48,7 +48,7 @@
 
 .search-bar {
     width: 100%;
-    padding: 12px 16px 12px 44px;
+    padding: 12px 130px 12px 44px;
     background: var(--bg-card);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -59,6 +59,28 @@
     font-size: var(--font-size-md);
     outline: none;
     transition: all var(--transition-fast);
+}
+
+.feeling-lucky-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.feeling-lucky-btn:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+    border-color: rgba(var(--accent-primary-rgb), 0.2);
 }
 
 .search-bar::placeholder {
