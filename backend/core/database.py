@@ -39,6 +39,9 @@ async def init_db() -> None:
     import models.notification  # noqa: F401
     import models.receipt  # noqa: F401
 
+    import models.activity  # noqa: F401
+    import models.poll  # noqa: F401
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         if "sqlite" in settings.get_database_url:

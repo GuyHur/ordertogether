@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from models.invite import InviteLink
 from models.order import Order, OrderParticipant, OrderStatus
 from models.user import User
+from models.activity import Activity
 from core.config import settings
 
 
@@ -52,6 +53,14 @@ async def create_order(
         note="Order creator",
     )
     db.add(participant)
+    
+    activity = Activity(
+        order_id=order.id,
+        user_id=creator.id,
+        message=f"started a new group order for {title}"
+    )
+    db.add(activity)
+    
     await db.commit()
 
     # Re-fetch with relationships
@@ -187,6 +196,14 @@ async def join_order(
         items_summary=items_summary,
     )
     db.add(participant)
+    
+    activity = Activity(
+        order_id=order.id,
+        user_id=user.id,
+        message=f"joined the order for {order.title}"
+    )
+    db.add(activity)
+    
     await db.commit()
     await db.refresh(participant)
     return participant
@@ -270,6 +287,13 @@ async def update_order_status(
     # When leaving invite_only, deactivate all invite links
     if old_status == OrderStatus.INVITE_ONLY and order.status != OrderStatus.INVITE_ONLY:
         await _deactivate_all_invites(db, order_id)
+
+    activity = Activity(
+        order_id=order.id,
+        user_id=user_id,
+        message=f"marked the {order.title} order as {new_status}"
+    )
+    db.add(activity)
 
     await db.commit()
     return await get_order_by_id(db, order_id)

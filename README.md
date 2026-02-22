@@ -12,6 +12,9 @@ OrderTogether is a web application for coordinating group food delivery orders w
 - **QR code generation** -- for Wolt orders, a scannable QR code linking to the group order is generated locally on the client. No data is sent to external services.
 - **Theme system** -- six visual themes (Midnight, Dark, Light, Sunset, Ocean, Forest) with full CSS variable architecture. Theme preference is persisted in local storage.
 - **Authentication** -- JWT-based registration and login with bcrypt password hashing and automatic token refresh. Optionally supports Windows Active Directory (LDAP) logins.
+- **"Where should we eat?" Polling** -- Can't decide where to order from? Create a poll and let your team vote between custom options or specific delivery services. Then instantly launch a shared order with the winning choice!
+- **1-Click Reorder** -- easily duplicate any past group order to save time setting up your regular Thursday Team Lunch.
+- **Live Social Feed** -- your dashboard includes a dynamic real-time social timeline showing any new orders created, polls started, users joining an order, or status changes.
 - **Real-time countdown** -- live deadline timers on the order board with visual urgency indicators.
 
 ## Tech Stack

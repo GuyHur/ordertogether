@@ -7,7 +7,10 @@ import Home from './pages/Home/Home'
 import Login from './pages/Login/Login'
 import Register from './pages/Register/Register'
 import CreateOrder from './pages/CreateOrder/CreateOrder'
+import CreatePoll from './pages/CreatePoll/CreatePoll'
 import OrderDetail from './pages/OrderDetail/OrderDetail'
+import Polls from './pages/Polls/Polls'
+import PollDetail from './pages/PollDetail/PollDetail'
 import MyOrders from './pages/MyOrders/MyOrders'
 import Profile from './pages/Profile/Profile'
 import Admin from './pages/Admin/Admin'
@@ -52,7 +55,10 @@ function AppLayout() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/create" element={<CreateOrder />} />
+        <Route path="/create-poll" element={<CreatePoll />} />
+        <Route path="/polls" element={<Polls />} />
         <Route path="/order/:id" element={<OrderDetail />} />
+        <Route path="/poll/:id" element={<PollDetail />} />
         <Route path="/my-orders" element={<MyOrders />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />

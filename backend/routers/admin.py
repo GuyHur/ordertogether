@@ -178,8 +178,11 @@ async def remove_service(service_id: str, current_user: CurrentUser, db: DB):
 
 from collections import Counter
 from datetime import timedelta
+from sqlalchemy import func
 from sqlalchemy.orm import selectinload
 from models.order import Order, OrderParticipant
+from models.poll import Poll
+from models.activity import Activity
 
 @router.get("/metrics")
 async def get_metrics(current_user: CurrentUser, db: DB):
@@ -240,11 +243,17 @@ async def get_metrics(current_user: CurrentUser, db: DB):
     hours_order = [f"{str(i).zfill(2)}:00" for i in range(24)]
     by_hour = [{"name": h, "value": hour_counts.get(h, 0)} for h in hours_order]
 
+    # Polls and Activities counts
+    total_polls = (await db.execute(select(func.count(Poll.id)))).scalar_one()
+    total_activities = (await db.execute(select(func.count(Activity.id)))).scalar_one()
+
     return {
         "summary": {
             "total_orders": total_orders,
             "total_participants": total_participants,
-            "deliveries_saved": deliveries_saved
+            "deliveries_saved": deliveries_saved,
+            "total_polls": total_polls,
+            "total_activities": total_activities
         },
         "by_status": [{"name": k, "value": v} for k, v in status_counts.items()],
         "by_service": [{"name": k, "value": v} for k, v in service_counts.items()],

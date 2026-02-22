@@ -6,7 +6,7 @@ import {
     RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
     ComposedChart
 } from 'recharts'
-import { ArrowLeft, Activity, Users, ShoppingBag, MapPin, Award, Truck, DollarSign, Tag, Clock } from 'lucide-react'
+import { ArrowLeft, Activity, Users, ShoppingBag, MapPin, Award, Truck, DollarSign, Tag, Clock, List } from 'lucide-react'
 import { api } from '../../services/api'
 import { useToast } from '../../components/Toast/Toast'
 import './BIDashboard.css'
@@ -91,6 +91,27 @@ export default function BIDashboard() {
                     <div className="stat-content">
                         <div className="stat-value">{metrics.top_creators?.[0]?.name || 'N/A'}</div>
                         <div className="stat-label">Top Order Creator</div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bi-stats-grid" style={{ marginTop: "16px" }}>
+                <div className="bi-stat-card">
+                    <div className="stat-icon" style={{ color: 'var(--accent-purple)', backgroundColor: 'rgba(159, 122, 234, 0.1)' }}>
+                        <List size={24} />
+                    </div>
+                    <div className="stat-content">
+                        <div className="stat-value">{metrics.summary.total_polls || 0}</div>
+                        <div className="stat-label">Polls Created</div>
+                    </div>
+                </div>
+                <div className="bi-stat-card">
+                    <div className="stat-icon" style={{ color: 'var(--accent-pink)', backgroundColor: 'rgba(237, 100, 166, 0.1)' }}>
+                        <Activity size={24} />
+                    </div>
+                    <div className="stat-content">
+                        <div className="stat-value">{metrics.summary.total_activities || 0}</div>
+                        <div className="stat-label">Social Events Logged</div>
                     </div>
                 </div>
             </div>

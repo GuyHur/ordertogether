@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { api } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast/Toast'
@@ -12,18 +12,21 @@ export default function CreateOrder() {
     const { user } = useAuth()
     const { addToast } = useToast()
 
+    const location = useLocation()
+    const { state } = location
+
     const [services, setServices] = useState([])
     const [appConfig, setAppConfig] = useState({ buildings: [], food_tags: [] })
     const [form, setForm] = useState({
-        service_id: '',
-        title: '',
-        description: '',
-        destination: '',
-        order_link: '',
+        service_id: state?.service_id || '',
+        title: state?.title || '',
+        description: state?.description || '',
+        destination: state?.destination || '',
+        order_link: state?.order_link || '',
         group_order_id: '',
-        building: user?.building || '',
-        location_note: '',
-        food_tags: [],
+        building: state?.building || user?.building || '',
+        location_note: state?.location_note || '',
+        food_tags: state?.food_tags || [],
         deadline: '',
     })
     const [loading, setLoading] = useState(false)

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Home, PlusCircle, ClipboardList, User, LogOut, Palette, Bell, Settings, Sun, Moon } from 'lucide-react'
+import { Home, PlusCircle, ClipboardList, User, LogOut, Palette, Bell, Settings, Sun, Moon, BarChart } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { api } from '../../services/api'
@@ -92,6 +92,10 @@ export default function Navbar() {
                 <NavLink to="/create" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                     <PlusCircle size={18} />
                     <span>New Order</span>
+                </NavLink>
+                <NavLink to="/polls" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    <BarChart size={18} />
+                    <span>Polls</span>
                 </NavLink>
                 <NavLink to="/my-orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                     <ClipboardList size={18} />

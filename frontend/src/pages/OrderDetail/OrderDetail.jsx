@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
     ArrowLeft, Users, MapPin, Clock, ExternalLink,
     Calendar, UserPlus, UserMinus, LogOut as LeaveIcon, Trash2 as TrashIcon, QrCode,
-    Share2, Building, Check, Copy, Link2, Plus, MessageCircle, Send, Upload, FileImage
+    Share2, Building, Check, Copy, Link2, Plus, MessageCircle, Send, Upload, FileImage, RefreshCw
 } from 'lucide-react'
 import { api } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
@@ -297,6 +297,26 @@ export default function OrderDetail() {
                         </div>
                     </div>
                     <div className="detail-actions">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                                navigate('/create', {
+                                    state: {
+                                        service_id: order.service?.id,
+                                        title: order.title,
+                                        description: order.description,
+                                        destination: order.destination,
+                                        building: order.building,
+                                        location_note: order.location_note,
+                                        food_tags: order.food_tags
+                                    }
+                                })
+                            }}
+                        >
+                            <RefreshCw size={16} />
+                            Reorder
+                        </Button>
                         {order.group_order_id && (isParticipant || isCreator) && (
                             <Button variant="ghost" size="sm" onClick={() => setShowQR(true)}>
                                 <QrCode size={16} />
