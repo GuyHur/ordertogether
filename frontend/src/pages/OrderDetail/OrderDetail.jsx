@@ -13,6 +13,7 @@ import CountdownTimer from '../../components/CountdownTimer/CountdownTimer'
 import Modal from '../../components/Modal/Modal'
 import QRModal from '../../components/QRModal/QRModal'
 import Avatar from '../../components/Avatar/Avatar'
+import { getServiceIcon } from '../../utils/getIcon'
 import '../auth.css'
 import './OrderDetail.css'
 
@@ -284,7 +285,7 @@ export default function OrderDetail() {
                 <div className="detail-card-header">
                     <div className="detail-card-header-left">
                         <img
-                            src={order.service?.icon_url}
+                            src={getServiceIcon(order.service?.icon_url)}
                             alt={order.service?.name}
                             className="detail-service-icon"
                         />

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Users, MapPin, Clock, Building } from 'lucide-react'
 import CountdownTimer from '../CountdownTimer/CountdownTimer'
 import Avatar from '../Avatar/Avatar'
+import { getServiceIcon } from '../../utils/getIcon'
 import './OrderCard.css'
 
 export default function OrderCard({ order, style }) {
@@ -16,7 +17,7 @@ export default function OrderCard({ order, style }) {
             <div className="order-card-header">
                 <div className="order-card-info">
                     <img
-                        src={order.service?.icon_url}
+                        src={getServiceIcon(order.service?.icon_url)}
                         alt={order.service?.name}
                         className="order-card-service-icon"
                     />
