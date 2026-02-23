@@ -3,13 +3,14 @@ import { Users, MapPin, Clock, Building } from 'lucide-react'
 import CountdownTimer from '../CountdownTimer/CountdownTimer'
 import Avatar from '../Avatar/Avatar'
 import { getServiceIcon } from '../../utils/getIcon'
+import { parseZonedDateTime } from '../../utils/date'
 import './OrderCard.css'
 
 export default function OrderCard({ order, style }) {
     const isUrgent =
         order.deadline &&
         order.status === 'open' &&
-        new Date(order.deadline) - Date.now() < 15 * 60 * 1000 // <15 min
+        parseZonedDateTime(order.deadline) - Date.now() < 15 * 60 * 1000 // <15 min
 
     return (
         <Link to={`/order/${order.id}`} className="order-card" style={style}>

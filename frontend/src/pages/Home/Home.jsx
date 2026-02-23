@@ -6,6 +6,7 @@ import OrderCard from '../../components/OrderCard/OrderCard'
 import EmptyState from '../../components/EmptyState/EmptyState'
 import Button from '../../components/Button/Button'
 import { useToast } from '../../components/Toast/Toast'
+import { formatTimeAgo } from '../../utils/date'
 import './Home.css'
 
 const STATUS_FILTERS = [
@@ -299,17 +300,4 @@ export default function Home() {
             </div>
         </div>
     )
-}
-
-function formatTimeAgo(dateString) {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now - date
-    const diffSecs = Math.floor(diffMs / 1000)
-
-    if (diffSecs < 60) return 'Just now'
-    if (diffSecs < 3600) return `${Math.floor(diffSecs / 60)}m ago`
-    if (diffSecs < 86400) return `${Math.floor(diffSecs / 3600)}h ago`
-    return `${Math.floor(diffSecs / 86400)}d ago`
 }

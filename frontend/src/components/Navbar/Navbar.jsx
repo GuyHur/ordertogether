@@ -4,6 +4,7 @@ import { Home, PlusCircle, ClipboardList, User, LogOut, Palette, Bell, Settings,
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { api } from '../../services/api'
+import { parseZonedDateTime } from '../../utils/date'
 import Avatar from '../Avatar/Avatar'
 import './Navbar.css'
 
@@ -130,7 +131,7 @@ export default function Navbar() {
                                         >
                                             <div className="notif-message">{n.message}</div>
                                             <div className="notif-time">
-                                                {new Date(n.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                {parseZonedDateTime(n.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </div>
                                         </div>
                                     ))}

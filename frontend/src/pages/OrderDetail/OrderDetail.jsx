@@ -14,6 +14,7 @@ import Modal from '../../components/Modal/Modal'
 import QRModal from '../../components/QRModal/QRModal'
 import Avatar from '../../components/Avatar/Avatar'
 import { getServiceIcon } from '../../utils/getIcon'
+import { parseZonedDateTime } from '../../utils/date'
 import '../auth.css'
 import './OrderDetail.css'
 
@@ -269,7 +270,7 @@ export default function OrderDetail() {
 
     const formatDate = (d) => {
         if (!d) return '—'
-        return new Date(d).toLocaleString('en-GB', {
+        return parseZonedDateTime(d).toLocaleString(undefined, {
             day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
         })
     }
@@ -675,7 +676,7 @@ export default function OrderDetail() {
                                         <div className="chat-message-header">
                                             <span className="chat-author">{c.user?.display_name}</span>
                                             <span className="chat-time">
-                                                {new Date(c.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                                                {parseZonedDateTime(c.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                         <div className="chat-body">{c.body}</div>
