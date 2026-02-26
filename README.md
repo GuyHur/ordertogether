@@ -31,7 +31,7 @@ OrderTogether is a web application for coordinating group food delivery orders w
 
 ## Running inside Docker (Recommended)
 
-The easiest way to run the application is via Docker Compose. It automatically spins up a robust PostgreSQL database, the Backend API, and the compiled Nginx Frontend.
+The easiest way to run the application is via Docker Compose. It automatically spins up a robust PostgreSQL database, the Backend API, and the pre-built Nginx Frontend.
 
 1. Create a `backend/.env` file with your preferred configurations. For a quick start:
    ```env
@@ -43,14 +43,39 @@ The easiest way to run the application is via Docker Compose. It automatically s
    SECRET_KEY="production-secret-here"
    ```
 
-2. Run the deployment:
+2. Run the deployment (this will pull the required images):
    ```bash
-   docker-compose up -d --build
+   docker-compose up -d
    ```
 
 3. Access the application:
-   - Frontend React App: `http://localhost:80`
+   - Frontend React App: `http://localhost:8080`
    - Backend API Docs: `http://localhost:8000/docs`
+
+### Alternative: Manual Docker Run
+
+If you want to run the containers manually without docker-compose, you must first create a shared bridge network so the containers can resolve each other by name. Without this, the frontend will crash on startup with an `nginx: [emerg] host not found in upstream "backend"` error.
+
+```bash
+# 1. Create a dedicated network
+docker network create ordertogether_net
+
+# 2. Run the backend container (requires environment variables from .env to be passed if needed)
+docker run -d --name backend --network ordertogether_net \
+  -v ./backend/data:/app/data \
+  poortuna/ordertogether/ordertogether-backend:v1.0.0
+
+# 3. Run the frontend container
+# We pass BACKEND_HOST=backend to tell the Nginx proxy where to route /api/ traffic.
+docker run -it --rm --name frontend --network ordertogether_net \
+  -e BACKEND_HOST=backend \
+  -p 8080:8080 poortuna/ordertogether/ordertogether-frontend:v1.0.0
+```
+
+Alternatively, if your backend is running externally or on your host machine (and you aren't using a docker network), you can point the frontend to it directly:
+```bash
+docker run -it --rm -p 8080:8080 -e BACKEND_HOST=host.docker.internal -e BACKEND_PORT=8000 poortuna/ordertogether/ordertogether-frontend:v1.0.0
+```
 
 ---
 

@@ -15,8 +15,7 @@ services:
     restart: unless-stopped
 
   backend:
-    build:
-      context: ./backend
+    image: poortuna/ordertogether/ordertogether-backend:v1.0.0
     container_name: ordertogether_backend
     depends_on:
       - db
@@ -41,14 +40,13 @@ services:
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ./frontend
+    image: poortuna/ordertogether/ordertogether-frontend:v1.0.0
     container_name: ordertogether_frontend
     depends_on:
       - backend
     ports:
-      # Exposes the frontend Application on port 80
-      - "80:80"
+      # Exposes the frontend Application on port 8080
+      - "8080:8080"
     restart: unless-stopped
 
 volumes:
