@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast/Toast'
 import { api } from '../../services/api'
 import Button from '../../components/Button/Button'
+import Avatar from '../../components/Avatar/Avatar'
 import '../auth.css'
 import './Profile.css'
 
@@ -45,13 +46,6 @@ export default function Profile() {
         }
     }
 
-    const initials = form.display_name
-        ?.split(' ')
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase() || '?'
-
     return (
         <div className="profile-page">
             <h1 className="page-title">Profile</h1>
@@ -59,12 +53,7 @@ export default function Profile() {
 
             <div className="profile-card">
                 <div className="profile-avatar-section">
-                    <div
-                        className="profile-avatar-large"
-                        style={{ backgroundColor: form.avatar_color }}
-                    >
-                        {initials}
-                    </div>
+                    <Avatar user={{ ...user, ...form }} className="profile-avatar-large" />
                     <div className="profile-avatar-info">
                         <div className="profile-avatar-name">{form.display_name || 'Your Name'}</div>
                         <div className="profile-avatar-email">{user?.email}</div>
@@ -118,6 +107,6 @@ export default function Profile() {
                     </Button>
                 </form>
             </div>
-        </div>
+        </div >
     )
 }

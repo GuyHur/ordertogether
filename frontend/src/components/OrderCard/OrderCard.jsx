@@ -1,20 +1,16 @@
 import { Link } from 'react-router-dom'
 import { Users, MapPin, Clock, Building } from 'lucide-react'
 import CountdownTimer from '../CountdownTimer/CountdownTimer'
+import Avatar from '../Avatar/Avatar'
+import { getServiceIcon } from '../../utils/getIcon'
+import { parseZonedDateTime } from '../../utils/date'
 import './OrderCard.css'
 
 export default function OrderCard({ order, style }) {
-    const initials = order.creator?.display_name
-        ?.split(' ')
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase() || '?'
-
     const isUrgent =
         order.deadline &&
         order.status === 'open' &&
-        new Date(order.deadline) - Date.now() < 15 * 60 * 1000 // <15 min
+        parseZonedDateTime(order.deadline) - Date.now() < 15 * 60 * 1000 // <15 min
 
     return (
         <Link to={`/order/${order.id}`} className="order-card" style={style}>
@@ -22,7 +18,7 @@ export default function OrderCard({ order, style }) {
             <div className="order-card-header">
                 <div className="order-card-info">
                     <img
-                        src={order.service?.icon_url}
+                        src={getServiceIcon(order.service?.icon_url)}
                         alt={order.service?.name}
                         className="order-card-service-icon"
                     />
@@ -56,12 +52,7 @@ export default function OrderCard({ order, style }) {
             {/* Meta */}
             <div className="order-card-meta">
                 <div className="order-card-creator">
-                    <div
-                        className="order-card-avatar"
-                        style={{ backgroundColor: order.creator?.avatar_color || 'var(--accent-primary)' }}
-                    >
-                        {initials}
-                    </div>
+                    <Avatar user={order.creator} className="order-card-avatar" />
                     <span className="order-card-meta-item">
                         {order.creator?.display_name}
                     </span>

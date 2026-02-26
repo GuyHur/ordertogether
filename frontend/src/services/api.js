@@ -63,4 +63,18 @@ export const api = {
     post: (path, body) => request(path, { method: 'POST', body: JSON.stringify(body) }),
     put: (path, body) => request(path, { method: 'PUT', body: JSON.stringify(body) }),
     delete: (path) => request(path, { method: 'DELETE' }),
+    upload: async (path, formData) => {
+        const token = localStorage.getItem('access_token')
+        const res = await fetch(`${API_BASE}${path}`, {
+            method: 'POST',
+            headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+            body: formData,
+        })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.detail || res.statusText)
+        }
+        if (res.status === 204) return null
+        return res.json()
+    },
 }

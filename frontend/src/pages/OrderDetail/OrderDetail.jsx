@@ -3,14 +3,18 @@ import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
     ArrowLeft, Users, MapPin, Clock, ExternalLink,
     Calendar, UserPlus, UserMinus, LogOut as LeaveIcon, Trash2 as TrashIcon, QrCode,
-    Share2, Building, Check, Copy, Link2, Plus
+    Share2, Building, Check, Copy, Link2, Plus, MessageCircle, Send, Upload, FileImage, RefreshCw
 } from 'lucide-react'
 import { api } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast/Toast'
 import Button from '../../components/Button/Button'
 import CountdownTimer from '../../components/CountdownTimer/CountdownTimer'
+import Modal from '../../components/Modal/Modal'
 import QRModal from '../../components/QRModal/QRModal'
+import Avatar from '../../components/Avatar/Avatar'
+import { getServiceIcon } from '../../utils/getIcon'
+import { parseZonedDateTime } from '../../utils/date'
 import '../auth.css'
 import './OrderDetail.css'
 
@@ -34,6 +38,18 @@ export default function OrderDetail() {
     const [invites, setInvites] = useState([])
     const [creatingInvite, setCreatingInvite] = useState(false)
     const [linkCopied, setLinkCopied] = useState(false)
+
+    // Chat
+    const [comments, setComments] = useState([])
+    const [commentBody, setCommentBody] = useState('')
+    const [sendingComment, setSendingComment] = useState(false)
+
+    // Receipts
+    const [receipts, setReceipts] = useState([])
+    const [uploadingReceipt, setUploadingReceipt] = useState(false)
+
+    // Modals
+    const [confirmAction, setConfirmAction] = useState(null)
 
     const loadOrder = useCallback(async (showLoading = true) => {
         if (showLoading) setLoading(true)
@@ -68,6 +84,69 @@ export default function OrderDetail() {
     }, [id, isCreator, order?.status])
 
     useEffect(() => { loadInvites() }, [loadInvites])
+
+    // Load comments polling
+    const loadComments = useCallback(async () => {
+        try {
+            const data = await api.get(`/orders/${id}/comments`)
+            setComments(data)
+        } catch { /* noop */ }
+    }, [id])
+
+    useEffect(() => {
+        loadComments()
+        const interval = setInterval(loadComments, 5000)
+        return () => clearInterval(interval)
+    }, [loadComments])
+
+    // Load receipts
+    const loadReceipts = useCallback(async () => {
+        try {
+            const data = await api.get(`/orders/${id}/receipts`)
+            setReceipts(data)
+        } catch { /* noop */ }
+    }, [id])
+
+    useEffect(() => { loadReceipts() }, [loadReceipts])
+
+    const handleDownload = async (receiptId, filename) => {
+        try {
+            const token = localStorage.getItem('access_token')
+            const res = await fetch(`/api/orders/${id}/receipts/${receiptId}/download`, {
+                headers: { ...(token && { Authorization: `Bearer ${token}` }) }
+            })
+            if (!res.ok) throw new Error("Download failed")
+
+            const blob = await res.blob()
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = filename
+            document.body.appendChild(a)
+            a.click()
+            window.URL.revokeObjectURL(url)
+            a.remove()
+        } catch (err) {
+            addToast("Error downloading receipt", "error")
+        }
+    }
+
+    const handleDeleteReceipt = (receiptId, filename) => {
+        setConfirmAction({
+            title: 'Delete Receipt',
+            message: `Are you sure you want to permanently delete the receipt "${filename}"?`,
+            onConfirm: async () => {
+                setConfirmAction(null)
+                try {
+                    await api.delete(`/orders/${id}/receipts/${receiptId}`)
+                    addToast('Receipt deleted', 'info')
+                    await loadReceipts()
+                } catch (err) {
+                    addToast(err.message, 'error')
+                }
+            }
+        })
+    }
 
     if (loading) return (
         <div className="detail-page">
@@ -145,15 +224,21 @@ export default function OrderDetail() {
         }
     }
 
-    const handleKick = async (participantId) => {
-        if (!window.confirm('Are you sure you want to remove this user from the order?')) return;
-        try {
-            await api.delete(`/orders/${id}/participants/${participantId}`)
-            addToast('Participant removed', 'info')
-            await loadOrder()
-        } catch (err) {
-            addToast(err.message, 'error')
-        }
+    const handleKick = (participantId) => {
+        setConfirmAction({
+            title: 'Remove Participant',
+            message: 'Are you sure you want to remove this user from the order?',
+            onConfirm: async () => {
+                setConfirmAction(null)
+                try {
+                    await api.delete(`/orders/${id}/participants/${participantId}`)
+                    addToast('Participant removed', 'info')
+                    await loadOrder()
+                } catch (err) {
+                    addToast(err.message, 'error')
+                }
+            }
+        })
     }
 
     const handleStatusChange = async (newStatus) => {
@@ -166,20 +251,26 @@ export default function OrderDetail() {
         }
     }
 
-    const handleDelete = async () => {
-        if (!confirm('Are you sure you want to cancel this order?')) return
-        try {
-            await api.delete(`/orders/${id}`)
-            addToast('Order cancelled', 'info')
-            navigate('/')
-        } catch (err) {
-            addToast(err.message, 'error')
-        }
+    const handleDelete = () => {
+        setConfirmAction({
+            title: 'Cancel Order',
+            message: 'Are you sure you want to cancel this order?',
+            onConfirm: async () => {
+                setConfirmAction(null)
+                try {
+                    await api.delete(`/orders/${id}`)
+                    addToast('Order cancelled', 'info')
+                    navigate('/')
+                } catch (err) {
+                    addToast(err.message, 'error')
+                }
+            }
+        })
     }
 
     const formatDate = (d) => {
         if (!d) return '—'
-        return new Date(d).toLocaleString('en-GB', {
+        return parseZonedDateTime(d).toLocaleString(undefined, {
             day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
         })
     }
@@ -195,7 +286,7 @@ export default function OrderDetail() {
                 <div className="detail-card-header">
                     <div className="detail-card-header-left">
                         <img
-                            src={order.service?.icon_url}
+                            src={getServiceIcon(order.service?.icon_url)}
                             alt={order.service?.name}
                             className="detail-service-icon"
                         />
@@ -207,6 +298,26 @@ export default function OrderDetail() {
                         </div>
                     </div>
                     <div className="detail-actions">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                                navigate('/create', {
+                                    state: {
+                                        service_id: order.service?.id,
+                                        title: order.title,
+                                        description: order.description,
+                                        destination: order.destination,
+                                        building: order.building,
+                                        location_note: order.location_note,
+                                        food_tags: order.food_tags
+                                    }
+                                })
+                            }}
+                        >
+                            <RefreshCw size={16} />
+                            Reorder
+                        </Button>
                         {order.group_order_id && (isParticipant || isCreator) && (
                             <Button variant="ghost" size="sm" onClick={() => setShowQR(true)}>
                                 <QrCode size={16} />
@@ -358,21 +469,9 @@ export default function OrderDetail() {
 
                     <div className="participants-list">
                         {order.participants?.map((p) => {
-                            const init = p.user?.display_name
-                                ?.split(' ')
-                                .map((w) => w[0])
-                                .slice(0, 2)
-                                .join('')
-                                .toUpperCase() || '?'
-
                             return (
                                 <div key={p.id} className="participant-row">
-                                    <div
-                                        className="participant-avatar"
-                                        style={{ backgroundColor: p.user?.avatar_color || 'var(--accent-primary)' }}
-                                    >
-                                        {init}
-                                    </div>
+                                    <Avatar user={p.user} className="participant-avatar" />
                                     <div className="participant-info">
                                         <div className="participant-name">{p.user?.display_name}</div>
                                         {(p.note || p.items_summary) && (
@@ -488,6 +587,129 @@ export default function OrderDetail() {
                             </Button>
                         </div>
                     )}
+
+                    {/* Receipt Upload (creator) */}
+                    {isCreator && (
+                        <div className="detail-section" style={{ marginTop: 'var(--space-xl)' }}>
+                            <div className="detail-section-title">
+                                <FileImage size={18} />
+                                Receipts
+                            </div>
+                            <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap', marginBottom: 'var(--space-md)' }}>
+                                <label className="receipt-upload-btn">
+                                    <Upload size={14} />
+                                    {uploadingReceipt ? 'Uploading…' : 'Upload Receipt'}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0]
+                                            if (!file) return
+                                            setUploadingReceipt(true)
+                                            try {
+                                                const fd = new FormData()
+                                                fd.append('file', file)
+                                                await api.upload(`/orders/${id}/receipts`, fd)
+                                                addToast('Receipt uploaded!', 'success')
+                                                await loadReceipts()
+                                            } catch (err) {
+                                                addToast(err.message, 'error')
+                                            } finally {
+                                                setUploadingReceipt(false)
+                                            }
+                                        }}
+                                    />
+                                </label>
+                            </div>
+                            {receipts.map(r => (
+                                <div key={r.id} className="receipt-row">
+                                    <span className="receipt-name">{r.filename}</span>
+                                    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
+                                        <button onClick={() => handleDownload(r.id, r.filename)} className="receipt-download">
+                                            Download
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteReceipt(r.id, r.filename)}
+                                            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent-danger)' }}
+                                            title="Delete Receipt"
+                                        >
+                                            <TrashIcon size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Receipts list for participants */}
+                    {!isCreator && receipts.length > 0 && (
+                        <div className="detail-section" style={{ marginTop: 'var(--space-xl)' }}>
+                            <div className="detail-section-title">
+                                <FileImage size={18} />
+                                Receipts
+                            </div>
+                            {receipts.map(r => (
+                                <div key={r.id} className="receipt-row">
+                                    <span className="receipt-name">{r.filename}</span>
+                                    <button onClick={() => handleDownload(r.id, r.filename)} className="receipt-download">
+                                        Download
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Chat / Comments */}
+                    {(isParticipant || isCreator) && (
+                        <div className="detail-section" style={{ marginTop: 'var(--space-xl)' }}>
+                            <div className="detail-section-title">
+                                <MessageCircle size={18} />
+                                Chat ({comments.length})
+                            </div>
+                            <div className="chat-messages">
+                                {comments.length === 0 && (
+                                    <div className="chat-empty">No messages yet. Say something!</div>
+                                )}
+                                {comments.map(c => (
+                                    <div key={c.id} className={`chat-message ${c.user?.id === user?.id ? 'own' : ''}`}>
+                                        <div className="chat-message-header">
+                                            <span className="chat-author">{c.user?.display_name}</span>
+                                            <span className="chat-time">
+                                                {parseZonedDateTime(c.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <div className="chat-body">{c.body}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <form className="chat-input-row" onSubmit={async (e) => {
+                                e.preventDefault()
+                                if (!commentBody.trim() || sendingComment) return
+                                setSendingComment(true)
+                                try {
+                                    await api.post(`/orders/${id}/comments`, { body: commentBody.trim() })
+                                    setCommentBody('')
+                                    await loadComments()
+                                } catch (err) {
+                                    addToast(err.message, 'error')
+                                } finally {
+                                    setSendingComment(false)
+                                }
+                            }}>
+                                <input
+                                    type="text"
+                                    className="form-input chat-input"
+                                    placeholder="Type a message…"
+                                    value={commentBody}
+                                    onChange={(e) => setCommentBody(e.target.value)}
+                                />
+                                <Button type="submit" variant="primary" size="sm" loading={sendingComment}>
+                                    <Send size={14} />
+                                </Button>
+                            </form>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -497,6 +719,22 @@ export default function OrderDetail() {
                     groupOrderId={order.group_order_id}
                     onClose={() => setShowQR(false)}
                 />
+            )}
+
+            {/* Confirmation modal */}
+            {confirmAction && (
+                <Modal
+                    title={confirmAction.title}
+                    onClose={() => setConfirmAction(null)}
+                    footer={
+                        <>
+                            <Button variant="ghost" onClick={() => setConfirmAction(null)}>Cancel</Button>
+                            <Button variant="danger" onClick={confirmAction.onConfirm}>OK</Button>
+                        </>
+                    }
+                >
+                    <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{confirmAction.message}</p>
+                </Modal>
             )}
         </div>
     )

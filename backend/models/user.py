@@ -1,6 +1,6 @@
 """User ORM model."""
 
-from sqlalchemy import String
+from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base, TimestampMixin, UUIDMixin
@@ -9,10 +9,12 @@ from models.base import Base, TimestampMixin, UUIDMixin
 class User(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "users"
 
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True, index=True)
     display_name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     auth_source: Mapped[str] = mapped_column(String(20), nullable=False, default="local")
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     building: Mapped[str | None] = mapped_column(String(100), nullable=True)
     avatar_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
+import { parseZonedDateTime } from '../../utils/date'
 
 export default function CountdownTimer({ deadline }) {
     const [remaining, setRemaining] = useState('')
 
     useEffect(() => {
         function update() {
-            const diff = new Date(deadline) - Date.now()
+            const diff = parseZonedDateTime(deadline) - Date.now()
             if (diff <= 0) {
                 setRemaining('Expired')
                 return

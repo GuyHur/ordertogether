@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
     /* ── Register ──────────────────────────────────────────────────────── */
     const register = useCallback(async (email, password, displayName, building) => {
         const data = await api.post('/auth/register', {
-            email,
+            email: email || null,
             password,
             display_name: displayName,
             building: building || null,

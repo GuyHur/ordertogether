@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
 const THEMES = [
-    { id: 'light', label: 'Light', emoji: '☀️', description: 'Clean and bright' },
-    { id: 'midnight', label: 'Midnight', emoji: '🌙', description: 'Deep indigo dark' },
-    { id: 'dark', label: 'Dark', emoji: '🖤', description: 'Pure black & grey' },
-    { id: 'sunset', label: 'Sunset', emoji: '🌅', description: 'Warm orange & purple' },
-    { id: 'ocean', label: 'Ocean', emoji: '🌊', description: 'Deep sea cyan' },
-    { id: 'forest', label: 'Forest', emoji: '🌲', description: 'Natural greens' },
+    { id: 'light', label: 'Light', type: 'light', description: 'Clean and bright' },
+    { id: 'midnight', label: 'Midnight', type: 'dark', description: 'Deep indigo dark' },
+    { id: 'dark', label: 'Dark', type: 'dark', description: 'Pure black & grey' },
+    { id: 'sunset', label: 'Sunset', type: 'dark', description: 'Warm orange & purple' },
+    { id: 'ocean', label: 'Ocean', type: 'dark', description: 'Deep sea cyan' },
+    { id: 'forest', label: 'Forest', type: 'dark', description: 'Natural greens' },
 ]
 
 const STORAGE_KEY = 'ot-theme'

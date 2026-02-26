@@ -1,6 +1,6 @@
 """Order business logic."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,8 @@ from sqlalchemy.orm import selectinload
 from models.invite import InviteLink
 from models.order import Order, OrderParticipant, OrderStatus
 from models.user import User
+from models.activity import Activity
+from core.config import settings
 
 
 async def create_order(
@@ -51,6 +53,14 @@ async def create_order(
         note="Order creator",
     )
     db.add(participant)
+    
+    activity = Activity(
+        order_id=order.id,
+        user_id=creator.id,
+        message=f"started a new group order for {title}"
+    )
+    db.add(activity)
+    
     await db.commit()
 
     # Re-fetch with relationships
@@ -80,6 +90,8 @@ async def list_orders(
     food_tag: str | None = None,
 ) -> list[Order]:
     """List orders, optionally filtered by status, service, building, search text, or food tag."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=settings.ORDER_EXPIRATION_HOURS)
+    
     query = (
         select(Order)
         .options(
@@ -87,6 +99,7 @@ async def list_orders(
             selectinload(Order.service),
             selectinload(Order.participants).selectinload(OrderParticipant.user),
         )
+        .where(Order.created_at >= cutoff)
         .order_by(Order.created_at.desc())
     )
 
@@ -110,6 +123,8 @@ async def list_orders(
 
 async def get_user_orders(db: AsyncSession, user_id: str) -> dict:
     """Get orders created by and joined by a user."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=settings.ORDER_EXPIRATION_HOURS)
+    
     # Created orders
     created_result = await db.execute(
         select(Order)
@@ -119,6 +134,7 @@ async def get_user_orders(db: AsyncSession, user_id: str) -> dict:
             selectinload(Order.participants).selectinload(OrderParticipant.user),
         )
         .where(Order.creator_id == user_id)
+        .where(Order.created_at >= cutoff)
         .order_by(Order.created_at.desc())
     )
     created = list(created_result.scalars().all())
@@ -134,6 +150,7 @@ async def get_user_orders(db: AsyncSession, user_id: str) -> dict:
         .join(OrderParticipant, Order.id == OrderParticipant.order_id)
         .where(OrderParticipant.user_id == user_id)
         .where(Order.creator_id != user_id)
+        .where(Order.created_at >= cutoff)
         .order_by(Order.created_at.desc())
     )
     joined = list(joined_result.scalars().all())
@@ -179,6 +196,14 @@ async def join_order(
         items_summary=items_summary,
     )
     db.add(participant)
+    
+    activity = Activity(
+        order_id=order.id,
+        user_id=user.id,
+        message=f"joined the order for {order.title}"
+    )
+    db.add(activity)
+    
     await db.commit()
     await db.refresh(participant)
     return participant
@@ -263,15 +288,36 @@ async def update_order_status(
     if old_status == OrderStatus.INVITE_ONLY and order.status != OrderStatus.INVITE_ONLY:
         await _deactivate_all_invites(db, order_id)
 
+    activity = Activity(
+        order_id=order.id,
+        user_id=user_id,
+        message=f"marked the {order.title} order as {new_status}"
+    )
+    db.add(activity)
+
     await db.commit()
     return await get_order_by_id(db, order_id)
 
 
+import os
+from sqlalchemy import select
+from models.receipt import Receipt
+
 async def delete_order(db: AsyncSession, order_id: str, user_id: str) -> bool:
-    """Cancel/delete an order (creator only)."""
+    """Cancel/delete an order (creator only). Also removes local attachment files."""
     order = await get_order_by_id(db, order_id)
     if order is None or order.creator_id != user_id:
         return False
+
+    # Clean up physical receipt files from disk
+    result = await db.execute(select(Receipt).where(Receipt.order_id == order_id))
+    receipts = result.scalars().all()
+    for receipt in receipts:
+        if receipt.file_path and os.path.exists(receipt.file_path):
+            try:
+                os.remove(receipt.file_path)
+            except OSError:
+                pass
 
     await db.delete(order)
     await db.commit()
